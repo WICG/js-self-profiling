@@ -56,18 +56,23 @@ Future ideas:
 
 ## Minimal API Proposal
 
-* performance.startProfiling(options) => Promise that resolves with a Profiler object
-    * “options” is a JS object containing the profiling configuration:
-        * options.interval: profiling interval in milliseconds (float)
-        * options.version: profiling format version (integer)
-    * The call returns immediately with a Promise. The promise is resolved to a Profiler object when the browser starts profiling the target thread(s) with the provided configuration. The promise is rejected if the profiler failed to start.
-        * Example: performance.startProfiling().then(profiler => doInterestingWorkload()).catch(/* failed to start profiling or other error */)
-        * The Profiler object has the methods stopProfiling and cancelProfiling
-* Profiler.stopProfiling() => Promise that resolves with a ProfilingResult object
-    * Stops profiling, returns a Promise immediately that resolves to a ProfilingResult object (see below) or rejects with an error (e.g. if profiling is not active)
-* Profiler.cancelProfiling() => Promise
-    * Cancels profiling started by performance.startProfiling(). Returns a Promise that resolves after profiling is cancelled or rejects if there is an error.
-    * Unlike stopProfiling, cancelling does not require the browser to do any extra processing before returning the collected samples (e.g. gathering samples from multiple threads, calculating effective sampling rate).
+* `performance.startProfiling(options) => Promise` that resolves with a `Profiler` object
+    * `options` is a JS object containing the profiling configuration:
+        * `options.interval`: profiling interval in milliseconds (float)
+        * `options.version`: profiling format version (integer)
+    * The call returns immediately with a Promise. The promise is resolved to a `Profiler` object when the browser starts profiling the target thread(s) with the provided configuration. The promise is rejected if the profiler failed to start.
+        * Example:
+        ```javascript
+        performance.startProfiling()
+            .then(profiler => doInterestingWork())
+            .catch(/* failed to start profiling or other error */);
+        ```
+        * The `Profiler` object has the methods stopProfiling and cancelProfiling
+* `Profiler.stopProfiling() => Promise` that resolves with a `ProfilingResult` object
+    * Stops profiling, returns a Promise immediately that resolves to a `ProfilingResult` object (see below) or rejects with an error (e.g. if profiling is not active)
+* `Profiler.cancelProfiling() => Promise`
+    * Cancels profiling started by `performance.startProfiling()`. Returns a Promise that resolves after profiling is cancelled or rejects if there is an error.
+    * Unlike `stopProfiling`, cancelling does not require the browser to do any extra processing before returning the collected samples (e.g. gathering samples from multiple threads, calculating effective sampling rate).
 
 ## Possible JSON Profile Format
 
@@ -80,7 +85,7 @@ There are examples of trie-based approaches in browsers today:
 
 An idea for a possible format:
 
-```
+```javascript
 {
     version: 1,
     options: {
