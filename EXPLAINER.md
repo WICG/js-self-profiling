@@ -2,15 +2,15 @@
 
 ## Motivation
 
-Currently it is difficult for web developers to understand how their applications perform in the wide variety of conditions encountered on real user devices. A programmable JS profiling API is needed to make it possible to collect JS profiles from real end-user environments.
+Currently it is difficult for web developers to understand how their applications perform in the wide variety of conditions encountered on real user devices. A programmable JS profiling API is needed to collect JS profiles from real end-user environments.
 
 A native self-profiling API for JS code would also allow web developers to efficiently find hotspots in their JS code during page loads and user interactions, to assign CPU budgets to individual JS-implemented features on the page, to find unnecessary work being done on the client, and to find low-priority JS code executing in the background and wasting device power.
 
-Currently JS self-profiling can be done by instrumenting individual JS functions with timing code but this is cumbersome, bloats JS size, changes the code (potentially altering performance characteristics), adds overhead from timing calls, and risks missing out on hotspots in unexpected corners.
+Currently JS self-profiling can be accomplished by instrumenting individual JS functions with timing code but this is cumbersome, bloats JS size, changes the code (potentially altering performance characteristics), adds overhead from timing calls, and risks missing out on hotspots in unexpected corners.
 
 ## Facebook's Profiler Polyfill
 
-In an attempt to polyfill the missing self-profiling functionality, Facebook built and deployed its own in-page JS profiler implemented using JS and SharedArrayBuffers. This JS profiler was implemented using a worker thread that signaled to the main thread when it needed to record its current stack. The worker thread would toggle a “capture stack now” flag in a SharedArrayBuffer every few milliseconds, and the value of this flag was read by instrumentation code that was inserted at transpilation time into the beginning of interesting JS functions running on the main thread. If the instrumentation code saw that the flag was set, it would capture the current JS stack (using the Error object) and add it to the running profile.
+In an attempt to polyfill the missing self-profiling functionality, Facebook built and deployed its own in-page JS profiler implemented with JavaScript and SharedArrayBuffers. This JS profiler was implemented using a worker thread that signaled to the main thread when it needed to record its current stack. The worker thread would toggle a “capture stack now” flag in a SharedArrayBuffer every few milliseconds, and the value of this flag was read by instrumentation code that was inserted at transpilation time into the beginning of interesting JS functions running on the main thread. If the instrumentation code saw that the flag was set, it would capture the current JS stack (using the Error object) and add it to the running profile.
 
 This JS profiler was enabled for only a small percentage of Facebook users, and only instrumented functions of 10 statements or more in order to limit performance impact and to limit the quantity of profiling data collected. Nevertheless, we found it extremely valuable for understanding Facebook.com's performance in the field and for finding optimization opportunities. 
 
@@ -40,7 +40,7 @@ Minimum of functionality:
 
 Wishlist features:
 
-* Add performance.mark() data to collected profiles
+* Add `performance.mark()` data to collected profiles
 * Ability to profile arbitrary threads or all threads from the same origin, including WebWorker, SharedWorker and ServiceWorker threads
 * Ability to have multiple profiling requests happening at the same time (e.g. both mousedown and mouseup issue a startProfiling command before either of them stops profiling)
 * Ability to specify a circular buffer size
@@ -134,4 +134,7 @@ Mozilla's perf.html visualization tool for Firefox profiles or Chrome's trace-vi
 
 ## perf.html
 
-As an illustration, Mozilla's perf.html project shows the JS stack aggregation and timeline. It is able to show gaps where JavaScript was not executing, areas where there were long running events (red), and an aggregate view of the samples in the selected timerange such as the 15 contiguous samples in function 'user.ts' highlighted in the screenshot below.
+As an illustration, a screenshot below from Mozilla's perf.html project shows the JS stack aggregation and timeline. It is able to show gaps where JavaScript was not executing, areas where there were long running events (red), and an aggregate view of the samples in the selected time range such as the 15 contiguous samples in function 'user.ts' highlighted in the screenshot below.
+
+![Mozilla's perf.html UI for visualizing Gecko profiles](perf.html.png)
+
