@@ -77,7 +77,7 @@ Future ideas:
 ### New HTTP Header Parameter
 
 * We also propose a new HTTP header parameter: `JavaScript-Start-Profiling: <float> `
-    * If present, this header will start profiling as soon as the page starts to process the response, before it has loaded any JavaScript
+    * If present, this header indicates to the browser to start profiling as soon as the page starts to process the response, before it has loaded any JavaScript
     * The value of this header is the profiling interval (in milliseconds)
 
 ## Possible JSON Profile Format
