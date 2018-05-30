@@ -73,6 +73,12 @@ Future ideas:
 * `Profiler.cancelProfiling() => Promise`
     * Cancels profiling started by `performance.startProfiling()`. Returns a Promise that resolves after profiling is cancelled or rejects if there is an error.
     * Unlike `stopProfiling`, cancelling does not require the browser to do any extra processing before returning the collected samples (e.g. gathering samples from multiple threads, calculating effective sampling rate).
+    
+### New HTTP Header Parameter
+
+* We also propose a new HTTP header parameter: `JavaScript-Start-Profiling: <float> `
+    * If present, this header will start profiling as soon as the page starts to process the response, before it has loaded any JavaScript
+    * The value of this header is the profiling interval (in milliseconds)
 
 ## Possible JSON Profile Format
 
