@@ -100,6 +100,7 @@
         <li>A set of <a>categories</a> from which it samples <a>frames</a> from.</li>
         <li>An <dfn data-cite="!HTML#origin">origin</dfn>.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
+        <li>A <dfn>sample buffer</dfn> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
       </ol>
       <p>
       Multiple profiling sessions on the same page SHOULD be supported.
@@ -122,13 +123,11 @@
         <p>
         The UA MAY move a session to <code>stopped</code> from any state.
         </p>
-        <p class="note">
-        The user agent MAY stop a profiling session if the amount of buffered
-        <a>samples</a> exceeds some limit. It is RECOMMENDED that implementors
-        set a limit on the number of samples on a per origin basis.
-        </p>
         <p>
         A <code>stopped</code> session MUST NOT move to the <code>started</code> or <code>paused</code> states.
+        </p>
+        <p>
+        If the number of samples captured by a <code>started</code> session reaches the <a>sample buffer size limit</a>, the session MUST move to the <code>stopped</code> state and a new event of type <dfn>samplebufferfull</dfn> MUST be sent to the event handler associated with the session's associated <a>Profiler</a>.
         </p>
       </section>
     </section>
@@ -139,6 +138,7 @@
       interface Profiler {
         readonly attribute ProfilerOptions options;
         readonly attribute bool stopped;
+        attribute EventHandler onsamplebufferfull;
 
         Promise&lt;ProfilerTrace&gt; stop();
       };
@@ -146,6 +146,7 @@
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
       <p>The <dfn>options</dfn> attribute MUST reflect the parameters of the associated <a>profiling session</a>.
       <p>The <dfn>stopped</dfn> attribute MUST be true if and only if the <a>profiling session</a> has state <code>stopped</code>.</p>
+      <p>The <dfn>onsamplebufferfull</dfn> attribute is the event handler for the <a>samplebufferfull</a> event.</p>
       <section>
         <h2><dfn>stop()</dfn> method</h2>
         <p>
@@ -250,6 +251,7 @@
       dictionary ProfilerInitOptions {
         required sequence&lt;DOMString&gt; categories;
         required DOMHighResTimeStamp sampleInterval;
+        required unsigned long maxBufferSize;
       };
 
       [Exposed=(Window,Worker)]
@@ -261,6 +263,7 @@
       <ul>
         <li><dfn>ProfilerInitOptions.categories</dfn> is the list of categories to be used when collecting <a>frames</a>. This list MUST contain one or more <a>supported categories</a>.</li>
         <li><dfn>ProfilerInitOptions.sampleInterval</dfn> is the application's desired <a>sample interval</a>. This value MUST be greater than or equal to zero.</li>
+        <li><dfn>ProfilerInitOptions.maxBufferSize</dfn> is the desired maximum capacity of the created profiler's <a>sample buffer</a>, in samples.</li>
       </ul>
       <section>
         <h2><dfn>profile()</dfn> method</h2>
@@ -278,6 +281,7 @@
             <li>The associated <a>categories</a> are equal to <var>filteredCategories</var>.</li>
             <li>The associated <a>origin</a> is equal to the origin of the global object's associated environment settings context.</li>
             <li>The associated <a>time origin</a> is equal to the time origin of the global object.</li>
+            <li>The associated <a>sample buffer</a> is created with size <a>ProfilerInitOptions.maxBufferSize</a>.</li>
           </ol>
           <li>Return a <code>Promise</code> that yields a <a>Profiler</a> instance once the <a>profiling session</a> has started.</li>
         </ol>
