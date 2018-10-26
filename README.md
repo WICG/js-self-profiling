@@ -1,5 +1,9 @@
 # JavaScript Self-Profiling API Proposal
 
+[Slides from TPAC 2018](https://github.com/vdjeric/js-self-profiling/blob/master/doc/tpac-2018-slides.pdf)
+
+[Draft spec](https://vdjeric.github.io/js-self-profiling)
+
 Discussion in GitHub issues + [WICG discourse thread](https://discourse.wicg.io/t/proposal-an-api-to-allow-webpage-javascript-to-profile-its-own-performance/2818)
 
 ## Motivation
