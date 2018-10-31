@@ -37,56 +37,40 @@ We also expect that third-party analytics providers will offer libraries or infr
 
 Finally, several other Web properties with large codebases have expressed interest to us for using this API to better monitor their webapps performance in the field.
 
-## API Requirements
+## API Overview
 
-Minimum of functionality:
+Developers will be able to spin up a new `profiler` via `performance.profile(options)`, where `options` contains the following required fields:
 
-* Ability to profile same-origin JavaScript executing on the main thread of the current page frame. The collected execution stacks should be similar in format to Error object stacks. Note that the profiler would not need to record native DOM calls.
-* Some way to communicate the accuracy of the collected profile: either timestamps for each sample or a calculated “effective” profiling interval.
+- Target sample rate
+- Maximum sample capacity
+- Call frame categories that should be traced (currently only "js")
 
-Wishlist features:
+The returned `profiler` (wrapped in a promise) will begin sampling. The UA may choose a different sample rate than the one that the user requested (which must be the next lowest valid sampling interval), or it may refuse to spin up a profiler for any reason (e.g. if there are too many profilers running concurrently) by rejecting the promise. The true sample rate of the profiler may be accessible via `profiler.options.sampleInterval`.
 
-* Add `performance.mark()` data to collected profiles
-* Ability to profile arbitrary threads or all threads from the same origin, including WebWorker, SharedWorker and ServiceWorker threads
-* Ability to have multiple profiling requests happening at the same time (e.g. both mousedown and mouseup issue a startProfiling command before either of them stops profiling)
-* Ability to specify a circular buffer size
-* An API to get the capabilities of the browser's profiling system. For example, a browser might only support profiling intervals higher than 2ms in order to defeat timing attacks if they don't support site isolation
+Each time the sampling interval has elapsed, the following algorithm is run:
 
-Future ideas:
+1. Let `env` be the script execution environment of the script that started the profiler.
+2. Let `stack` be the stack of execution contexts associated with `env`.
+3. For each execution context `ec` on `stack`:
+    1. Let `ecs` be the script associated with `ec`.
+    2. If the classic script tag associated with `ecs` shares an origin with the browsing context or has the `crossorigin` bit set (and it sends a valid CORS header), record the stack frame.
+    3. If the module script tag associated with `ecs` sends a valid CORS header, record the stack frame.
+    4. If `ec` is a top-level DOM entrypoint (e.g. document.addEventListener) called from an execution context of a first-party or CORS script, record the stack frame.
+    5. Otherwise, report an "unknown" stack frame, and coalesce against adjacent "unknown" stack frames.
+        - This step is important to avoid exposing information about the call stack depth of 3P scripts without CORS.
+4. Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.
 
-* Support for returning source-mapped profiles
-* Tracing instead of sampling
-* Incorporating DOM API calls into traces
-* Incorporating timing information for non-JS events (e.g. time spent in layout or styling)
-* Ability to profile across iframes from the same origin
+    _In a nutshell, this collects data from all stack frames that come from a script that is same-origin or participates in CORS, masking those that do not._
 
-## Minimal API Proposal
+The UA is free to elide any stack frames that may be optimized out (e.g. as a result of inlining).
 
-* `performance.startProfiling(options) => Promise` that resolves with a `Profiler` object
-    * `options` is a JS object containing the profiling configuration:
-        * `options.interval`: profiling interval in milliseconds (float)
-        * `options.version`: profiling format version (integer)
-    * The call returns immediately with a Promise. The promise is resolved to a `Profiler` object when the browser starts profiling the target thread(s) with the provided configuration. The promise is rejected if the profiler failed to start.
-        * Example:
-        ```javascript
-        performance.startProfiling()
-            .then(profiler => doInterestingWork())
-            .catch(/* failed to start profiling or other error */);
-        ```
-        * The `Profiler` object has the methods stopProfiling and cancelProfiling
-* `Profiler.stopProfiling() => Promise` that resolves with a `ProfilingResult` object
-    * Stops profiling, returns a Promise immediately that resolves to a `ProfilingResult` object (see below) or rejects with an error (e.g. if profiling is not active)
-* `Profiler.cancelProfiling() => Promise`
-    * Cancels profiling started by `performance.startProfiling()`. Returns a Promise that resolves after profiling is cancelled or rejects if there is an error.
-    * Unlike `stopProfiling`, cancelling does not require the browser to do any extra processing before returning the collected samples (e.g. gathering samples from multiple threads, calculating effective sampling rate).
-    
-### New HTTP Header Parameter
+Calling `profiler.stop()` returns a promise containing a trace object that can be sent to a server for aggregation. This trace is encoded in a trie format similar to the GeckoProfiler and Chrome tracing formats.
 
-* We also propose a new HTTP header parameter: `JavaScript-Start-Profiling: <float> `
-    * If present, this header indicates to the browser to start profiling as soon as the page starts to process the response, before it has loaded any JavaScript
-    * The value of this header is the profiling interval (in milliseconds)
+If the sample buffer capacity is reached, the `onsamplebufferfull` event is sent to the `profiler` object. This stops profiling immediately. The trace may still be collected via `profiler.stop()` when this occurs.
 
-## Possible JSON Profile Format
+## (old) Possible JSON Profile Format
+
+> 2018-10-31: We're currently exploring a more compact binary trace format for traces used for aggregation.
 
 Space-efficient encodings are possible given the tree-like structure of profile stacks and the repeated strings in function names and filenames. A trie seems like a natural choice. A trie is also desirable because the raw uncompressed memory representation causes huge memory pressure and is more expensive to analyze (e.g. to count stack frequencies).
 
