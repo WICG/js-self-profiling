@@ -52,7 +52,9 @@
       <section class="informative">
         <h2>Examples</h2>
         <pre class="example">
-        const profiler = performance.profile({ categories: ['js'], sampleInterval: 10 });
+        const profiler = performance.profile({ categories: ['js'],
+                                               sampleInterval: 10,
+                                               format: "json-gzip" });
         for (let i = 0; i &lt; 1000000; i++) {
              await doWork();
         }
@@ -140,7 +142,7 @@
         readonly attribute bool stopped;
         attribute EventHandler onsamplebufferfull;
 
-        Promise&lt;ProfilerTrace&gt; stop();
+        Promise&lt;ArrayBuffer&gt; stop();
       };
       </pre>
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
@@ -155,7 +157,12 @@
         <ol>
           <li>If the associated <a>profiling session</a>'s state is <code>stopped</code>, return the <a>ProfilerTrace</a> captured by the session.</li>
           <li>Set the <a>profiling session</a>'s state to <code>stopped</code>.</li>
-          <li>Return the session's <a>ProfilerTrace</a> resolved as a promise.</li>
+          <li>
+            <ul>
+              <li>If <a>ProfilerOptions.format</a> is <code>"json"</code>, return <a>ProfilerTrace.toJSON()</a> in an ArrayBuffer.</li>
+              <li>If <a>ProfilerOptions.format</a> is <code>"json-gzip"</code>, return <a>ProfilerTrace.toJSON()</a> GZIP-encoded in an ArrayBuffer.</li>
+            </ul>
+          </li>
         </ol>
         <p>
         Any <a>samples</a> taken after <a>stop()</a> is invoked SHOULD NOT be included by the <a>profiling session</a>.
@@ -169,6 +176,7 @@
       interface ProfilerOptions {
         readonly attribute FrozenArray&lt;DOMString&gt; categories;
         readonly attribute DOMHighResTimeStamp sampleInterval;
+        readonly attribute ProfilerTraceFormat format;
       };
       </pre>
       <p>The <dfn>categories</dfn> attribute MUST equal the <a>categories</a> of the <a>profiling session</a>.
@@ -203,13 +211,11 @@
           readonly attribute DOMHighResTimeStamp timestamp;
           readonly attribute int stackId;
 
-          ProfilerStack getStack();
           [Default] object toJSON();
         };
         </pre>
         <p>The <dfn>timestamp</dfn> attribute MUST be the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a> when the sample was recorded.</p>
         <p>The <dfn>stackId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[stackId]</code> is the leaf <a>stack</a> associated with this <a>sample</a>.</p>
-        <p>The <dfn>getStack()</dfn> method MUST return the <a>ProfilerStack</a> representing the <a>stack</a> captured by this <a>sample</a>.</p>
         <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
@@ -220,13 +226,11 @@
           readonly attribute int? parentId;
           readonly attribute int frameId;
 
-          sequence&lt;ProfilerFrame&gt; getFrames();
           [Default] object toJSON();
         };
         </pre>
         <p>The <dfn>parentId</dfn> attribute MUST be either <code>null</code> if the associated <a>frame</a> is at the bottom of the <a>stack</a>, OR a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[parentId]</code> is a parent substack containing outer frames.</p>
         <p>The <dfn>frameId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.frames</a>, where <code>ProfilerTrace.frames[frameId]</code> is the <a>frame</a> associated with this <a>stack</a>'s top.</p>
-        <p>The <dfn>getFrames()</dfn> method MUST return all frames in the <a>stack</a> captured.</p>
         <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
       </section>
       <section data-dfn-for="ProfilerFrame" data-link-for="ProfilerFrame">
@@ -248,10 +252,16 @@
     <section data-dfn-for="Performance" data-link-for="Performance">
       <h2>Extensions to the <code><dfn data-cite="!HR-TIME-2#dfn-performance">Performance</dfn></code> Interface</h2>
       <pre class="idl">
+      enum ProfilerTraceFormat {
+        "json",
+        "json-gzip",
+      };
+
       dictionary ProfilerInitOptions {
         required sequence&lt;DOMString&gt; categories;
         required DOMHighResTimeStamp sampleInterval;
         required unsigned long maxBufferSize;
+        required ProfilerTraceFormat format;
       };
 
       [Exposed=(Window,Worker)]
@@ -312,23 +322,22 @@
         </p>
         <p>
         These frames MUST be ordered relative to each other identically to the
-        <a>execution context stack</a>, such that the
-        <dfn data-cite="!ECMA-262#execution-context-stack">running execution context</dfn>
-        is the last element returned in <a>ProfilerStack.getFrames()</a>.
-        <p>
-        The UA MUST elide frames from scripts associated with a different origin than the <a>profiling session</a>.
-        </p>
+        <a>execution context stack</a>.
+        <pre class="idl">
+        [Exposed=(Window,Worker)]
+        interface JSProfilerFrame : ProfilerFrame {
+          readonly attribute DOMString label;
+          readonly attribute DOMString? filename;
+          readonly attribute int lineNumber;
+          readonly attribute int columnNumber;
+        };
+        </pre>
         <p>
         Each <code>"js"</code> frame MUST:
         </p>
         <ol>
           <li>Have <a>ProfilerFrame.category</a> equal to <code>"js"</code></li>
-          <li>Have <a>ProfilerFrame.label</a> contain the following data, in an arbitrary encoding:</li>
-          <ol>
-            <li>The name of the function called (if applicable).</li>
-            <li>The name of the property of this, or the class that holds the function (if applicable).</li>
-            <li>The location within the source.</li>
-          </ol>
+          <li>TODO(acomminos): map fields to ECMA-262.</li>
         </ol>
       </section>
     </section>
