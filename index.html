@@ -52,11 +52,11 @@
       <section class="informative">
         <h2>Examples</h2>
         <pre class="example">
-        const profiler = performance.profile({ categories: ['js'],
-                                               sampleInterval: 10,
-                                               format: "json-gzip" });
+        const profiler = await performance.profile({ categories: ['js'],
+                                                     sampleInterval: 10,
+                                                     format: 'json-gzip' });
         for (let i = 0; i &lt; 1000000; i++) {
-             await doWork();
+             doWork();
         }
         const trace = await profiler.stop();
         sendTrace(trace);
