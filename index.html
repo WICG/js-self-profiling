@@ -239,13 +239,11 @@
         [Exposed=(Window,Worker)]
         interface ProfilerFrame {
           readonly attribute DOMString category;
-          readonly attribute DOMString label;
 
           [Default] object toJSON();
         };
         </pre>
         <p>The <dfn>category</dfn> attribute MUST be one of the <a>categories</a> tracked by the <a>profiling session</a>.</p>
-        <p>The <dfn>label</dfn> attribute is an arbitrary descriptor for the frame, with characteristics variant on each <a>category</a>.</p>
         <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
       </section>
     </section>
@@ -315,30 +313,56 @@
         </p>
         <p>
         Each <a>sample</a> that a <a>profiling session</a> takes with the
-        <code>"js"</code> <a>category</a> MUST contain a <a>frame</a> for each
+        <code>"js"</code> <a>category</a> SHOULD contain a <a>frame</a> for each
         [[ECMA-262]] <dfn data-cite="!ECMA-262#execution-context">execution context</dfn>
         in the <dfn data-cite="!ECMA-262#execution-context-stack">execution context stack</dfn>
         associated with the <dfn data-cite="!ECMA-262#realm">realm</dfn> of the session's <a>global object</a>.
         </p>
+        <p class="note">
+          Note that UAs MAY elide stack frames for optimization purposes.
+        </p>
         <p>
         These frames MUST be ordered relative to each other identically to the
         <a>execution context stack</a>.
-        <pre class="idl">
-        [Exposed=(Window,Worker)]
-        interface JSProfilerFrame : ProfilerFrame {
-          readonly attribute DOMString label;
-          readonly attribute DOMString? filename;
-          readonly attribute int lineNumber;
-          readonly attribute int columnNumber;
-        };
-        </pre>
-        <p>
-        Each <code>"js"</code> frame MUST:
-        </p>
-        <ol>
-          <li>Have <a>ProfilerFrame.category</a> equal to <code>"js"</code></li>
-          <li>TODO(acomminos): map fields to ECMA-262.</li>
-        </ol>
+        <section id="js-profiler-frame" data-dfn-for="ProfilerJSStackFrame">
+          <h2>The <dfn>ProfilerJSStackFrame</dfn> Interface</h2>
+
+          The <a>ProfilerJSStackFrame</a> interface extends the following attributes of the <a>ProfilerFrame</a> interface:
+
+          <dl>
+            <dt><a>ProfilerFrame.category</a></dt>
+            <dd>This attribute MUST return <code>"js"</code>.</dd>
+          </dl>
+
+          <pre class="idl">
+          [Exposed=(Window,Worker)]
+          interface ProfilerJSStackFrame : ProfilerFrame {
+            readonly attribute DOMString? name;
+            readonly attribute DOMString uri;
+            readonly attribute int line;
+            readonly attribute int column;
+          };
+          </pre>
+          <p>
+          Let <var>ec</var> be the <a>execution context</a> that the frame models.
+          </p>
+          <p>
+          Let <var>instance</var> be the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>ec</var>, or <code>null</code>.
+          </p>
+          <ul>
+            <li><dfn>name</dfn> MUST be equal to the result of running the following algorithm:
+              <ul>
+                <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
+                <li>Otherwise, return <code>null</code>.</li>
+              </ul>
+              <li><dfn>uri</dfn> MUST be equal to the URI who contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
+            <li><dfn>line</dfn> MUST be equal to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
+            <li><dfn>column</dfn> MUST be equal to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
+          </ul>
+          <p class="ednote">
+            A more rigorous definition needs to be applied to the line and column attributes, particularly to define them for inline, eval, and toplevel scripts.
+          </p>
+        </section>
       </section>
     </section>
     <section id="privacy-security" class="informative">
