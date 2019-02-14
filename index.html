@@ -363,6 +363,28 @@
             A more rigorous definition needs to be applied to the line and column attributes, particularly to define them for inline, eval, and toplevel scripts.
           </p>
         </section>
+        <section>
+          <h2>Sampling Algorithm</h2>
+          <p class="ednote">
+            This section is non-normative for now, the specifics currently being driven by results from a prototype implementation.
+          </p>
+          <p>
+            We define the <dfn>sampling algorithm</dfn> for <code>"js"</code> frames as follows:
+          </p>
+          <ol>
+            <li>Let <var>env</var> be the script execution environment of the script that started the profiler.</li>
+            <li>Let <var>stack</var> be the stack of execution contexts associated with <var>env</var>.</li>
+            <li>
+              For each execution context <var>ec</var> on <var>stack</var>:
+              <ol>
+                <li>Let <var>ecs</var> be the script associated with <var>ec</var>.</li>
+                <li>If the source of a classic script tag associated with <var>ecs</var> shares an origin with the browsing context or has the <code>crossorigin</code> bit set (and it sends a valid CORS header), record the stack frame.</li>
+                <li>If the source of a module script tag associated with <var>ecs</var> sends a valid CORS header, record the stack frame.</li>
+                <li>Otherwise, omit the stack frame.</li>
+              </ol>
+              <li>Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
+          </ol>
+        </section>
       </section>
     </section>
     <section id="privacy-security" class="informative">
