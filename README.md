@@ -53,11 +53,9 @@ Each time the sampling interval has elapsed, the following algorithm is run:
 2. Let `stack` be the stack of execution contexts associated with `env`.
 3. For each execution context `ec` on `stack`:
     1. Let `ecs` be the script associated with `ec`.
-    2. If the classic script tag associated with `ecs` shares an origin with the browsing context or has the `crossorigin` bit set (and it sends a valid CORS header), record the stack frame.
-    3. If the module script tag associated with `ecs` sends a valid CORS header, record the stack frame.
-    4. If `ec` is a top-level DOM entrypoint (e.g. document.addEventListener) called from an execution context of a first-party or CORS script, record the stack frame.
-    5. Otherwise, report an "unknown" stack frame, and coalesce against adjacent "unknown" stack frames.
-        - This step is important to avoid exposing information about the call stack depth of 3P scripts without CORS.
+    2. If the source of the classic script tag associated with `ecs` shares an origin with the browsing context or has the `crossorigin` bit set (and it sends a valid CORS header), record the stack frame.
+    3. If the source of the module script tag associated with `ecs` sends a valid CORS header, record the stack frame.
+    4. Otherwise, omit the stack frame.
 4. Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.
 
     _In a nutshell, this collects data from all stack frames that come from a script that is same-origin or participates in CORS, masking those that do not._
