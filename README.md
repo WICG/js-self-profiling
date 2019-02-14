@@ -66,61 +66,70 @@ Calling `profiler.stop()` returns a promise containing a trace object that can b
 
 If the sample buffer capacity is reached, the `onsamplebufferfull` event is sent to the `profiler` object. This stops profiling immediately. The trace may still be collected via `profiler.stop()` when this occurs.
 
-## (old) Possible JSON Profile Format
-
-> 2018-10-31: We're currently exploring a more compact binary trace format for traces used for aggregation.
+## Profile Format
 
 Space-efficient encodings are possible given the tree-like structure of profile stacks and the repeated strings in function names and filenames. A trie seems like a natural choice. A trie is also desirable because the raw uncompressed memory representation causes huge memory pressure and is more expensive to analyze (e.g. to count stack frequencies).
 
 There are examples of trie-based approaches in browsers today:
 
-* Chrome's Trace Event format, specifically the stackFrames field: [https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.yr703knxre9f](https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/)
-* Firefox's Gecko Profiler format, specifically the stackTable field: https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md#source-data-format
+* [Chrome's Trace Event format, specifically the stackFrames field](https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.yr703knxre9f)
+* [Firefox's Gecko Profiler format, specifically the stackTable field](https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md#source-data-format)
 
-An idea for a possible format:
+Thus, we propose the following trie-based trace format, to be returned as either a standard JS dictionary or in a gzipped representation depending on the `format` argument (see spec).
 
 ```javascript
 {
-    version: 1,
-    options: {
-        <configuration actually used for profiling>
-    },
-    profile: {
-        strings: [
-            "start @ main.js:12:34"
-            "render @ newsfeed.js:56:78",
-            "getLikes @ stories.js:90:12",
-            "getComments @ stories.js:11:22"
-        ]
-        stackFrames: {
-            ...
-            101: { name: 0 },
-            102: { name: 1, parent: 101 },
-            103: { name: 2, parent: 102 },
-            104: { name: 3, parent: 102 }
-        },
-        main-thread: [
-            {
-                "type": "stack",
-                "timestamp": 12345.67890000,
-                "stack": 103,
-            },
-            {
-                "type": "stack",
-                "timestamp": 12346.00000000,
-                "stack": 104,
-            },
-            ...
-        ]
-    }
-}    
+   "stacks" : [
+      {
+         "frameId" : 0
+      },
+      {
+         "frameId" : 1,
+         "stackId" : 0
+      },
+      {
+         "frameId" : 2,
+         "stackId" : 1
+      },
+   ],
+   "samples" : [
+      {
+         "timestamp" : 1551.73499998637,
+         "stackId": 2
+      },
+      {
+         "timestamp" : 1576.83999999426,
+         "stackId": 1,
+      },
+      {
+         "timestamp" : 1601.90499993041
+      },
+   ],
+   "frames" : [
+      {
+         "category" : "js",
+         "name" : "b",
+         "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3/yW/r/ZgaPtFDHPeq.js",
+         "line" : 23,
+         "column" : 169,
+      },
+      {
+         "category" : "js",
+         "name" : "l",
+         "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js",
+         "line" : 313,
+         "column" : 468,
+      },
+      {
+         "category" : "js",
+         "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js",
+         "line" : 313,
+         "name" : "a",
+         "column" : 1325
+      },
+   ]
+}
 ```
-
-Open questions:
-
-* How to represent source locations for <script> tags, inline event handlers, etc.
-* How to represent a call to native DOM like innerHTML or "style recalc" or JS-builtins like Math.random()
-* How should async events between threads be annotated?
 
 ## Visualization
 
