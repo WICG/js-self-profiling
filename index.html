@@ -100,6 +100,7 @@
           </p>
         </li>
         <li>A set of <a>categories</a> from which it samples <a>frames</a> from.</li>
+        <li>A <dfn>trace format</dfn>.</li>
         <li>An <dfn data-cite="!HTML#origin">origin</dfn>.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
         <li>A <dfn>sample buffer</dfn> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
@@ -138,7 +139,7 @@
       <pre class="idl">
       [Exposed=(Window,Worker)]
       interface Profiler {
-        readonly attribute ProfilerOptions options;
+        readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute bool stopped;
         attribute EventHandler onsamplebufferfull;
 
@@ -146,7 +147,7 @@
       };
       </pre>
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
-      <p>The <dfn>options</dfn> attribute MUST reflect the parameters of the associated <a>profiling session</a>.
+      <p>The <dfn>sampleInterval</dfn> attribute MUST reflect the <a>sample interval</a> of the associated <a>profiling session</a>.
       <p>The <dfn>stopped</dfn> attribute MUST be true if and only if the <a>profiling session</a> has state <code>stopped</code>.</p>
       <p>The <dfn>onsamplebufferfull</dfn> attribute is the event handler for the <a>samplebufferfull</a> event.</p>
       <section>
@@ -159,8 +160,8 @@
           <li>Set the <a>profiling session</a>'s state to <code>stopped</code>.</li>
           <li>
             <ul>
-              <li>If <a>ProfilerOptions.format</a> is <code>"json"</code>, return <a>ProfilerTrace.toJSON()</a> in an ArrayBuffer.</li>
-              <li>If <a>ProfilerOptions.format</a> is <code>"json-gzip"</code>, return <a>ProfilerTrace.toJSON()</a> GZIP-encoded in an ArrayBuffer.</li>
+              <li>If <a>trace format</a> of the session is <code>"object"</code>, return a <a>ProfilerTrace</a> capturing the session.</li>
+              <li>If <a>trace format</a> of the session is <code>"json-gzip"</code>, return a new ArrayBuffer containing a GZIP representation of the default JSON operation on the <a>ProfilerTrace</a>.</li>
             </ul>
           </li>
         </ol>
@@ -169,97 +170,68 @@
         </p>
       </section>
     </section>
-    <section data-dfn-for="ProfilerOptions" data-link-for="ProfilerOptions">
-      <h2>The <dfn>ProfilerOptions</dfn> Interface</h2>
-      <pre class="idl">
-      [Exposed=(Window,Worker)]
-      interface ProfilerOptions {
-        readonly attribute FrozenArray&lt;DOMString&gt; categories;
-        readonly attribute DOMHighResTimeStamp sampleInterval;
-        readonly attribute ProfilerTraceFormat format;
-      };
-      </pre>
-      <p>The <dfn>categories</dfn> attribute MUST equal the <a>categories</a> of the <a>profiling session</a>.
-      <p>The <dfn>sampleInterval</dfn> attribute MUST equal the source <a>profiling session</a>'s targeted <a>sample interval</a> in milliseconds.</p>
-    </section>
     <section data-dfn-for="ProfilerTrace" data-link-for="ProfilerTrace">
-      <h2>The <dfn>ProfilerTrace</dfn> Interface</h2>
+      <h2>The <dfn>ProfilerTrace</dfn> Dictionary</h2>
       <pre class="idl">
-      [Exposed=(Window,Worker)]
-      interface ProfilerTrace {
-        readonly attribute FrozenArray&lt;ProfilerFrame&gt; frames;
-        readonly attribute FrozenArray&lt;ProfilerStack&gt; stacks;
-        readonly attribute FrozenArray&lt;ProfilerSample&gt; samples;
-
-        [Default] object toJSON();
+      dictionary ProfilerTrace {
+        required sequence&lt;ProfilerJSStackFrame&gt; frames;
+        required sequence&lt;ProfilerStack&gt; stacks;
+        required sequence&lt;ProfilerSample&gt; samples;
       };
       </pre>
       <p>The <dfn>frames</dfn> attribute MUST contain all frames recorded during the <a>profiling session</a>.</p>
       <p>The <dfn>stacks</dfn> attribute MUST contain all stacks recorded during the <a>profiling session</a>.</p>
       <p>The <dfn>samples</dfn> attribute MUST return all samples recorded during the <a>profiling session</a>, ordered from earliest to latest recorded.</p>
-      <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
       <p class="note">
       Inspired by the <a href="https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#">V8 trace event format</a>
       and <a href="https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md">Gecko profile format</a>,
       this representation is designed to be easily and efficiently serializable.
       </p>
       <section data-dfn-for="ProfilerSample" data-link-for="ProfilerSample">
-        <h2>The <dfn>ProfilerSample</dfn> Interface</h2>
+        <h2>The <dfn>ProfilerSample</dfn> Dictionary</h2>
         <pre class="idl">
-        [Exposed=(Window,Worker)]
-        interface ProfilerSample {
-          readonly attribute DOMHighResTimeStamp timestamp;
-          readonly attribute int stackId;
-
-          [Default] object toJSON();
+        dictionary ProfilerSample {
+          required DOMHighResTimeStamp timestamp;
+          int stackId;
         };
         </pre>
         <p>The <dfn>timestamp</dfn> attribute MUST be the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a> when the sample was recorded.</p>
-        <p>The <dfn>stackId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[stackId]</code> is the leaf <a>stack</a> associated with this <a>sample</a>.</p>
-        <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
+        <p>If the sample captured a stack, the <dfn>stackId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[stackId]</code> is the leaf <a>stack</a> associated with this <a>sample</a>. Otherwise, it MUST be undefined.</p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
-        <h2>The <dfn>ProfilerStack</dfn> Interface</h2>
+        <h2>The <dfn>ProfilerStack</dfn> Dictionary</h2>
         <pre class="idl">
-        [Exposed=(Window,Worker)]
-        interface ProfilerStack {
-          readonly attribute int? parentId;
-          readonly attribute int frameId;
-
-          [Default] object toJSON();
+        dictionary ProfilerStack {
+          int parentId;
+          required int frameId;
         };
         </pre>
         <p>The <dfn>parentId</dfn> attribute MUST be either <code>null</code> if the associated <a>frame</a> is at the bottom of the <a>stack</a>, OR a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[parentId]</code> is a parent substack containing outer frames.</p>
         <p>The <dfn>frameId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.frames</a>, where <code>ProfilerTrace.frames[frameId]</code> is the <a>frame</a> associated with this <a>stack</a>'s top.</p>
-        <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
       </section>
       <section data-dfn-for="ProfilerFrame" data-link-for="ProfilerFrame">
-        <h2>The <dfn>ProfilerFrame</dfn> Interface</h2>
+        <h2>The <dfn>ProfilerFrame</dfn> Dictionary</h2>
         <pre class="idl">
-        [Exposed=(Window,Worker)]
-        interface ProfilerFrame {
-          readonly attribute DOMString category;
-
-          [Default] object toJSON();
+        dictionary ProfilerFrame {
+          required DOMString category;
         };
         </pre>
         <p>The <dfn>category</dfn> attribute MUST be one of the <a>categories</a> tracked by the <a>profiling session</a>.</p>
-        <p>The <dfn>toJSON()</dfn> method is the default toJSON implementation as defined in [[WebIDL]].</p>
       </section>
     </section>
     <section data-dfn-for="Performance" data-link-for="Performance">
       <h2>Extensions to the <code><dfn data-cite="!HR-TIME-2#dfn-performance">Performance</dfn></code> Interface</h2>
       <pre class="idl">
       enum ProfilerTraceFormat {
-        "json",
+        "object",
         "json-gzip",
       };
 
       dictionary ProfilerInitOptions {
         required sequence&lt;DOMString&gt; categories;
         required DOMHighResTimeStamp sampleInterval;
-        required unsigned long maxBufferSize;
         required ProfilerTraceFormat format;
+        required unsigned long maxBufferSize;
       };
 
       [Exposed=(Window,Worker)]
@@ -286,6 +258,7 @@
           <ol>
             <li>The associated <a>global object</a> is set to the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
             <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
+            <li>The associated <a>trace format</a> is set to <a>ProfilerInitOptions.format</a>.</li>
             <li>The associated <a>categories</a> are equal to <var>filteredCategories</var>.</li>
             <li>The associated <a>origin</a> is equal to the origin of the global object's associated environment settings context.</li>
             <li>The associated <a>time origin</a> is equal to the time origin of the global object.</li>
@@ -325,9 +298,9 @@
         These frames MUST be ordered relative to each other identically to the
         <a>execution context stack</a>.
         <section id="js-profiler-frame" data-dfn-for="ProfilerJSStackFrame">
-          <h2>The <dfn>ProfilerJSStackFrame</dfn> Interface</h2>
+          <h2>The <dfn>ProfilerJSStackFrame</dfn> Dictionary</h2>
 
-          The <a>ProfilerJSStackFrame</a> interface extends the following attributes of the <a>ProfilerFrame</a> interface:
+          The <a>ProfilerJSStackFrame</a> dictionary extends the following attributes of the <a>ProfilerFrame</a> dictionary:
 
           <dl>
             <dt><a>ProfilerFrame.category</a></dt>
@@ -335,12 +308,11 @@
           </dl>
 
           <pre class="idl">
-          [Exposed=(Window,Worker)]
-          interface ProfilerJSStackFrame : ProfilerFrame {
-            readonly attribute DOMString? name;
-            readonly attribute DOMString uri;
-            readonly attribute int line;
-            readonly attribute int column;
+          dictionary ProfilerJSStackFrame : ProfilerFrame {
+            DOMString name;
+            required DOMString uri;
+            required int line;
+            required int column;
           };
           </pre>
           <p>
