@@ -350,8 +350,9 @@
               For each execution context <var>ec</var> on <var>stack</var>:
               <ol>
                 <li>Let <var>ecs</var> be the script associated with <var>ec</var>.</li>
-                <li>If the origin of the script associated with <var>ecs</var> is equal to the origin of the browsing context, or its associated script tag (if applicable) has the <code>crossorigin</code> bit set (and it sends a valid CORS header), record the stack frame.</li>
-                <li>Otherwise, omit the stack frame.</li>
+                <li>If the realm associated with <var>ecs</var> is not equal to the realm of the global object associated with the profiling session, skip.</li>
+                <li>If the origin of the script associated with <var>ecs</var> is not equal to the origin of the browsing context, and its associated script tag (if present) does not pass a CORS check, skip.</li>
+                <li>Otherwise, include the stack frame.</li>
               </ol>
               <li>Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
           </ol>
