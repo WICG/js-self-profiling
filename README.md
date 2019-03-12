@@ -2,7 +2,7 @@
 
 [Slides from TPAC 2018](https://github.com/vdjeric/js-self-profiling/blob/master/doc/tpac-2018-slides.pdf)
 
-[Draft spec](https://vdjeric.github.io/js-self-profiling)
+[Draft spec](https://wicg.github.io/js-self-profiling)
 
 Discussion in GitHub issues + [WICG discourse thread](https://discourse.wicg.io/t/proposal-an-api-to-allow-webpage-javascript-to-profile-its-own-performance/2818)
 
@@ -67,6 +67,27 @@ Calling `profiler.stop()` returns a promise containing a trace object that can b
 
 If the sample buffer capacity is reached, the `onsamplebufferfull` event is sent to the `profiler` object. This stops profiling immediately. The trace may still be collected via `profiler.stop()` when this occurs.
 
+## Privacy and Security
+
+The primary concern with profiling JavaScript running on an event loop shared
+by multiple browsing contexts is ensuring that stack frames from cross-origin
+browsing contexts are not leaked. The spec aims to avoid the leakage of such
+frames by utilizing a ECMA-262 realm-based filtering approach, allowing
+isolation of frames in profiling sessions to a single realm / frame to comply
+with the same-origin policy.
+
+Another concern is the leaking of function names from foreign-origin scripts,
+which wouldn't normally be accessible without the resource participating in
+CORS. The spec aims to mitigate this by only including such foreign-origin
+functions if the resource that contains them passes a CORS check. For classic
+scripts, this means that functions are only included in traces if the
+`crossorigin` bit traditionally used for uncensoring `Error.stack` contents is
+present in the associated script tag, and the scripts passes a CORS check.
+
+As with any API that exposes accurate timing information, timing side-channel
+attacks are a risk. We are not aware of any new timing attacks enabled by this
+spec, but further analysis is necessary.
+
 ## Profile Format
 
 Space-efficient encodings are possible given the tree-like structure of profile stacks and the repeated strings in function names and filenames. A trie seems like a natural choice. A trie is also desirable because the raw uncompressed memory representation causes huge memory pressure and is more expensive to analyze (e.g. to count stack frequencies).
@@ -86,11 +107,11 @@ Thus, we propose the following trie-based trace format, to be returned as either
       },
       {
          "frameId" : 1,
-         "stackId" : 0
+         "parentId" : 0
       },
       {
          "frameId" : 2,
-         "stackId" : 1
+         "parentId" : 1
       },
    ],
    "samples" : [
