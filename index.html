@@ -111,7 +111,9 @@
       <section>
         <h2>States</h2>
         <p>
-        In the <code>started</code> state, the UA SHOULD make a best-effort to capture samples.
+        In the <code>started</code> state, the UA SHOULD make a best-effort to
+        capture samples by executing the appropriate <a>sampling algorithm</a>
+        each time the <a>sample interval</a> has elapsed.
         In the <code>paused</code> and <code>stopped</code> states, the UA SHOULD NOT capture samples.
         </p>
         <p>
@@ -354,7 +356,7 @@
                 <li>If the origin of the script associated with <var>ecs</var> is not equal to the origin of the browsing context, and its associated script tag (if present) does not pass a CORS check, skip.</li>
                 <li>Otherwise, include the stack frame.</li>
               </ol>
-              <li>Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
+              <li>Record a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
           </ol>
           <section class="informative">
             <h2>Note on script origins</h2>
@@ -375,11 +377,27 @@
     <section id="privacy-security" class="informative">
       <h2>Privacy and Security</h2>
       <p>
+      The primary concern with profiling JavaScript running on an event loop
+      shared by multiple browsing contexts is ensuring that stack frames from
+      cross-origin browsing contexts are not leaked. The spec aims to avoid the
+      leakage of such frames by utilizing a ECMA-262 realm-based filtering
+      approach, allowing isolation of frames in profiling sessions to a single
+      realm / frame to comply with the same-origin policy.
+      </p>
+      <p>
+      Another concern is the leaking of function names from foreign-origin
+      scripts, which wouldn't normally be accessible without the resource
+      participating in CORS. The spec aims to mitigate this by only including
+      such foreign-origin functions if the resource that contains them passes a
+      CORS check. For classic scripts, this means that functions are only
+      included in traces if the <code>crossorigin</code> bit traditionally used
+      for uncensoring <code>Error.stack</code> contents is present in the
+      associated script tag.
+      </p>
+      <p>
       As with any API that exposes accurate timing information, timing
-      side-channel attacks are a risk. One possible strategy would be to use an
-      approach similar to Chromium's
-      <a href="https://www.chromium.org/developers/design-documents/site-isolation">Site Isolation</a>
-      to sandbox JavaScript on a per-site basis prior to implementing this specification.
+      side-channel attacks are a risk. We are not aware of any new timing
+      attacks enabled by this spec, but further analysis is necessary.
       </p>
       <p>
       Care must be taken when introducing new <a>categories</a> to avoid
@@ -387,12 +405,6 @@
       by this spec is restricted to only provide high-level execution data,
       future categories that reveal implementation-specific frames risk the
       possibility of introducing data for fingerprinting.
-      </p>
-      <p>
-      The use of the API may also introduce platform-specific security risks
-      depending on the browser on which JS is running. Further study and
-      analysis will be needed to understand the privacy and security risks
-      associated with the API.
       </p>
     </section>
   </body>
