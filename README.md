@@ -43,7 +43,6 @@ Developers will be able to spin up a new `profiler` via `performance.profile(opt
 
 - Target sample rate
 - Maximum sample capacity
-- Call frame categories that should be traced (currently only "js")
 
 The returned `profiler` (wrapped in a promise) will begin sampling. The UA may choose a different sample rate than the one that the user requested (which must be the next lowest valid sampling interval), or it may refuse to spin up a profiler for any reason (e.g. if there are too many profilers running concurrently) by rejecting the promise. The true sample rate of the profiler may be accessible via `profiler.options.sampleInterval`.
 
@@ -129,21 +128,18 @@ Thus, we propose the following trie-based trace format, to be returned as either
    ],
    "frames" : [
       {
-         "category" : "js",
          "name" : "b",
          "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3/yW/r/ZgaPtFDHPeq.js",
          "line" : 23,
          "column" : 169,
       },
       {
-         "category" : "js",
          "name" : "l",
          "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js",
          "line" : 313,
          "column" : 468,
       },
       {
-         "category" : "js",
          "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js",
          "line" : 313,
          "name" : "a",

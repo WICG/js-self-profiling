@@ -52,8 +52,7 @@
       <section class="informative">
         <h2>Examples</h2>
         <pre class="example">
-        const profiler = await performance.profile({ categories: ['js'],
-                                                     sampleInterval: 10,
+        const profiler = await performance.profile({ sampleInterval: 10,
                                                      format: 'json-gzip' });
         for (let i = 0; i &lt; 1000000; i++) {
              doWork();
@@ -72,15 +71,12 @@
       associated with a <a>stack</a>.
       </p>
       <p>
-      A <dfn>stack</dfn> is a list of <a>frames</a> that MUST be ordered sequentially from outermost to innermost frame.
+      A <dfn>stack</dfn> is a list of <a>frames</a> that MUST be ordered
+      sequentially from outermost to innermost frame.
       </p>
       <p>
       A <dfn data-lt="frame|frames">frame</dfn> is an element in the context of a <a>stack</a>
-      containing information about the current execution state. The contents of
-      each frame are dependent on their associated <a>categories</a>.
-      </p>
-      <p>
-      A <dfn data-lt="category|categories">category</dfn> is associated with a set of <a>frame</a> types. Each category defines requirements for which <a>frames</a> should be taken, as well as the properties of each frame.
+      containing information about the current execution state.
       </p>
     </section>
     <section>
@@ -99,7 +95,6 @@
           produce higher quality traces.
           </p>
         </li>
-        <li>A set of <a>categories</a> from which it samples <a>frames</a> from.</li>
         <li>A <dfn>trace format</dfn>.</li>
         <li>An <dfn data-cite="!HTML#origin">origin</dfn>.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
@@ -136,6 +131,42 @@
         </p>
       </section>
     </section>
+    <section>
+      <h2>Sampling Algorithm</h2>
+      <p class="ednote">
+      This section is non-normative for now, the specifics currently being driven by results from a prototype implementation.
+      </p>
+      <p>
+      We define the <dfn>sampling algorithm</dfn> as follows:
+      </p>
+      <ol>
+        <li>Let <var>env</var> be the script execution environment of the profiling session.</li>
+        <li>Let <var>stack</var> be the stack of <dfn data-cite="!ECMA-262#sec-execution-contexts">execution contexts</dfn> associated with <var>env</var>.</li>
+        <li>
+          For each execution context <var>ec</var> on <var>stack</var>:
+          <ol>
+            <li>Let <var>ecs</var> be the script associated with <var>ec</var>.</li>
+            <li>If the realm associated with <var>ecs</var> is not equal to the realm of the global object associated with the profiling session, skip.</li>
+            <li>If the origin of the script associated with <var>ecs</var> is not equal to the origin of the browsing context, and its associated script tag (if present) does not pass a CORS check, skip.</li>
+            <li>Otherwise, include the stack frame.</li>
+          </ol>
+          <li>Record a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
+      </ol>
+      <section class="informative">
+        <h2>Note on script origins</h2>
+        <p>
+        A origin of an execution context's script (pending formalization) can be mapped into the following cases in lieu of a formal algorithm:
+        </p>
+        <ul>
+          <li>For a classic inline script, the origin is the document containing the script. <em>This holds irrespective of whether the script was injected by a cross-origin script.</em></li>
+          <li>For a classic external script fetched over HTTP, the origin is derived from its URL.</li>
+          <li>For a module script, the origin is derived from its URL.</li>
+          <li>For <code>data:</code> and <code>javascript:</code> URLs, the origin is the origin of the document containing the script tag.</li>
+          <li>For an <code>eval</code>'d script, the origin is the origin of the origin of the source of the containing script. Recurse on this definition.</li>
+        </ul>
+      </section>
+    </section>
+
     <section data-dfn-for="Profiler" data-link-for="Profiler">
       <h2>The <dfn>Profiler</dfn> Interface</h2>
       <pre class="idl">
@@ -176,7 +207,7 @@
       <h2>The <dfn>ProfilerTrace</dfn> Dictionary</h2>
       <pre class="idl">
       dictionary ProfilerTrace {
-        required sequence&lt;ProfilerJSStackFrame&gt; frames;
+        required sequence&lt;ProfilerFrame&gt; frames;
         required sequence&lt;ProfilerStack&gt; stacks;
         required sequence&lt;ProfilerSample&gt; samples;
       };
@@ -215,10 +246,31 @@
         <h2>The <dfn>ProfilerFrame</dfn> Dictionary</h2>
         <pre class="idl">
         dictionary ProfilerFrame {
-          required DOMString category;
+          DOMString name;
+          required DOMString uri;
+          required int line;
+          required int column;
         };
         </pre>
-        <p>The <dfn>category</dfn> attribute MUST be one of the <a>categories</a> tracked by the <a>profiling session</a>.</p>
+        <p>
+        Let <var>ec</var> be the <a>execution context</a> that the frame models.
+        </p>
+        <p>
+        Let <var>instance</var> be the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>ec</var>, or <code>null</code>.
+        </p>
+        <ul>
+          <li><dfn>name</dfn> MUST be equal to the result of running the following algorithm:
+            <ul>
+              <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
+              <li>Otherwise, return <code>null</code>.</li>
+            </ul>
+            <li><dfn>uri</dfn> MUST be equal to the URI who contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
+            <li><dfn>line</dfn> MUST be equal to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
+            <li><dfn>column</dfn> MUST be equal to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
+        </ul>
+        <p class="ednote">
+          A more rigorous definition needs to be applied to the line and column attributes, particularly to define them for inline, eval, and toplevel scripts.
+        </p>
       </section>
     </section>
     <section data-dfn-for="Performance" data-link-for="Performance">
@@ -230,7 +282,6 @@
       };
 
       dictionary ProfilerInitOptions {
-        required sequence&lt;DOMString&gt; categories;
         required DOMHighResTimeStamp sampleInterval;
         required ProfilerTraceFormat format;
         required unsigned long maxBufferSize;
@@ -243,7 +294,6 @@
       </pre>
       <p><dfn>ProfilerInitOptions</dfn> MUST support the following fields:</p>
       <ul>
-        <li><dfn>ProfilerInitOptions.categories</dfn> is the list of categories to be used when collecting <a>frames</a>. This list MUST contain one or more <a>supported categories</a>.</li>
         <li><dfn>ProfilerInitOptions.sampleInterval</dfn> is the application's desired <a>sample interval</a>. This value MUST be greater than or equal to zero.</li>
         <li><dfn>ProfilerInitOptions.maxBufferSize</dfn> is the desired maximum capacity of the created profiler's <a>sample buffer</a>, in samples.</li>
       </ul>
@@ -254,124 +304,17 @@
         </p>
         <ol>
           <li>If <var>options</var>' <a>ProfilerInitOptions.sampleInterval</a> is less than 0, throw a <code>RangeError</code>.</li>
-          <li>Let <var>filteredCategories</var> be equal to the intersection of <a>ProfilerInitOptions.categories</a> and <a>supported categories</a>.</li>
-          <li>If <var>filteredCategories</var> is empty, throw an <code>Error</code>.</li>
           <li>Create a new <a>profiling session</a> where:</li>
           <ol>
             <li>The associated <a>global object</a> is set to the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
             <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
             <li>The associated <a>trace format</a> is set to <a>ProfilerInitOptions.format</a>.</li>
-            <li>The associated <a>categories</a> are equal to <var>filteredCategories</var>.</li>
             <li>The associated <a>origin</a> is equal to the origin of the global object's associated environment settings context.</li>
             <li>The associated <a>time origin</a> is equal to the time origin of the global object.</li>
             <li>The associated <a>sample buffer</a> is created with size <a>ProfilerInitOptions.maxBufferSize</a>.</li>
           </ol>
           <li>Return a <code>Promise</code> that yields a <a>Profiler</a> instance once the <a>profiling session</a> has started.</li>
         </ol>
-      </section>
-    </section>
-    <section>
-      <h2>Categories</h2>
-      <p>
-      The following are <dfn data-lt="supported categories|supported category">supported categories</dfn> for <a>ProfilerFrames</a>:
-      </p>
-      <ul>
-        <li><code>"js"</code></li>
-      </ul>
-      <p class="ednote">
-      This section is designed to be easily amended by future category specifications.
-      </p>
-      <section>
-        <h2>The <code>"js"</code> Category</h2>
-        <p>
-        The <code>"js"</code> <a>category</a> provides frame data for executing JS functions.
-        </p>
-        <p>
-        Each <a>sample</a> that a <a>profiling session</a> takes with the
-        <code>"js"</code> <a>category</a> SHOULD contain a <a>frame</a> for each
-        [[ECMA-262]] <dfn data-cite="!ECMA-262#execution-context">execution context</dfn>
-        in the <dfn data-cite="!ECMA-262#execution-context-stack">execution context stack</dfn>
-        associated with the <dfn data-cite="!ECMA-262#realm">realm</dfn> of the session's <a>global object</a>.
-        </p>
-        <p class="note">
-          Note that UAs MAY elide stack frames for optimization purposes.
-        </p>
-        <p>
-        These frames MUST be ordered relative to each other identically to the
-        <a>execution context stack</a>.
-        <section id="js-profiler-frame" data-dfn-for="ProfilerJSStackFrame">
-          <h2>The <dfn>ProfilerJSStackFrame</dfn> Dictionary</h2>
-
-          The <a>ProfilerJSStackFrame</a> dictionary extends the following attributes of the <a>ProfilerFrame</a> dictionary:
-
-          <dl>
-            <dt><a>ProfilerFrame.category</a></dt>
-            <dd>This attribute MUST return <code>"js"</code>.</dd>
-          </dl>
-
-          <pre class="idl">
-          dictionary ProfilerJSStackFrame : ProfilerFrame {
-            DOMString name;
-            required DOMString uri;
-            required int line;
-            required int column;
-          };
-          </pre>
-          <p>
-          Let <var>ec</var> be the <a>execution context</a> that the frame models.
-          </p>
-          <p>
-          Let <var>instance</var> be the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>ec</var>, or <code>null</code>.
-          </p>
-          <ul>
-            <li><dfn>name</dfn> MUST be equal to the result of running the following algorithm:
-              <ul>
-                <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
-                <li>Otherwise, return <code>null</code>.</li>
-              </ul>
-              <li><dfn>uri</dfn> MUST be equal to the URI who contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
-            <li><dfn>line</dfn> MUST be equal to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
-            <li><dfn>column</dfn> MUST be equal to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
-          </ul>
-          <p class="ednote">
-            A more rigorous definition needs to be applied to the line and column attributes, particularly to define them for inline, eval, and toplevel scripts.
-          </p>
-        </section>
-        <section>
-          <h2>Sampling Algorithm</h2>
-          <p class="ednote">
-            This section is non-normative for now, the specifics currently being driven by results from a prototype implementation.
-          </p>
-          <p>
-            We define the <dfn>sampling algorithm</dfn> for <code>"js"</code> frames as follows:
-          </p>
-          <ol>
-            <li>Let <var>env</var> be the script execution environment of the script that started the profiler.</li>
-            <li>Let <var>stack</var> be the stack of execution contexts associated with <var>env</var>.</li>
-            <li>
-              For each execution context <var>ec</var> on <var>stack</var>:
-              <ol>
-                <li>Let <var>ecs</var> be the script associated with <var>ec</var>.</li>
-                <li>If the realm associated with <var>ecs</var> is not equal to the realm of the global object associated with the profiling session, skip.</li>
-                <li>If the origin of the script associated with <var>ecs</var> is not equal to the origin of the browsing context, and its associated script tag (if present) does not pass a CORS check, skip.</li>
-                <li>Otherwise, include the stack frame.</li>
-              </ol>
-              <li>Record a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
-          </ol>
-          <section class="informative">
-            <h2>Note on script origins</h2>
-            <p>
-              A origin of an execution context's script (pending formalization) can be mapped into the following cases in lieu of a formal algorithm:
-            </p>
-            <ul>
-              <li>For a classic inline script, the origin is the document containing the script. <em>This holds irrespective of whether the script was injected by a cross-origin script.</em></li>
-              <li>For a classic external script fetched over HTTP, the origin is derived from its URL.</li>
-              <li>For a module script, the origin is derived from its URL.</li>
-              <li>For <code>data:</code> and <code>javascript:</code> URLs, the origin is the origin of the document containing the script tag.</li>
-              <li>For an <code>eval</code>'d script, the origin is the origin of the origin of the source of the containing script. Recurse on this definition.</li>
-            </ul>
-          </section>
-        </section>
       </section>
     </section>
     <section id="privacy-security" class="informative">
@@ -398,13 +341,6 @@
       As with any API that exposes accurate timing information, timing
       side-channel attacks are a risk. We are not aware of any new timing
       attacks enabled by this spec, but further analysis is necessary.
-      </p>
-      <p>
-      Care must be taken when introducing new <a>categories</a> to avoid
-      additional privacy concerns. While the <code>"js"</code> category defined
-      by this spec is restricted to only provide high-level execution data,
-      future categories that reveal implementation-specific frames risk the
-      possibility of introducing data for fingerprinting.
       </p>
     </section>
   </body>
