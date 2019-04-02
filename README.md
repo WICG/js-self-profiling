@@ -1,6 +1,6 @@
 # JavaScript Self-Profiling API Proposal
 
-[Slides from TPAC 2018](https://github.com/vdjeric/js-self-profiling/blob/master/doc/tpac-2018-slides.pdf)
+[Slides from TPAC 2018](https://github.com/WICG/js-self-profiling/blob/master/doc/tpac-2018-slides.pdf)
 
 [Draft spec](https://wicg.github.io/js-self-profiling)
 
