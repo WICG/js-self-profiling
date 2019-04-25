@@ -1,87 +1,90 @@
-# Self-Review Questionnaire: Privacy & Security
+# Answers to [Security and Privacy Questionnaire](https://www.w3.org/TR/security-privacy-questionnaire/)
 
-1.  Does this specification deal in any way with [personally-identifiable
-    information][pii]?
+### 3.1 Does this specification deal with personally-identifiable information?
 
-    **No.**
+No.
 
-2.  Does this specification deal with high-value information like credentials or
-    payment?
 
-    **No.**
+### 3.2 Does this specification deal with high-value data?
 
-3.  Does this specification allow an origin access to a user's location?
+No.
 
-    **No.**
 
-4.  Does this specification allow an origin access to sensors on a user's
-    device?
+### 3.3 Does this specification introduce new state for an origin that persists across browsing sessions?
 
-    **No.**
+No.
 
-5.  Does this specification allow an origin access to aspects of a user's local
-    computing environment (e.g. screen sizes, installed fonts, installed
-    plugins, bluetooth or network interface identifiers)?
 
-    **No.**
+### 3.4 Does this specification expose persistent, cross-origin state to the web?
 
-6.  Does this specification allow an origin access to other devices (e.g. via
-    bluetooth, USB, etc.)?
+No.
 
-    **No.**
 
-7.  Does this specification allow an origin some measure of control over a user
-    agent's native UI (showing, hiding, or modifying certain details, especially
-    if those details are relevant to security)?
+### 3.5 Does this specification expose any other data to an origin that it doesn’t currently have access to?
 
-    **No.**
+No. The main concern here would be with cross-origin scripts, whose contents
+would not be visible to script ordinarily unless, they passed a CORS check. The
+spec therefore mandates such resources to pass a CORS check in order to be
+included in profiles.
 
-8.  Does this specification expose origin-controlled data to an origin over
-    HTTP (e.g. cookies, `ETag` and `Last Modified` headers)? Via an API (e.g.
-    `localStorage`)?
 
-    **No.**
+### 3.6 Does this specification enable new script execution/loading mechanisms?
 
-9.  Does this specification expose temporary identifiers to the web (e.g. TLS
-    features like Channel ID, session identifiers/tickets, etc)?
+No.
 
-    **No.**
 
-10. Does this specification expose persistent details to the web (device-level,
-    like GPU details, or otherwise)? Have steps been taken to reduce the entropy
-    these details introduce?
+### 3.7 Does this specification allow an origin access to a user’s location?
 
-    **Not explicitly.** However, the UA is free to select which sampling intervals it
+No.
+
+
+### 3.8 Does this specification allow an origin access to sensors on a user’s device?
+
+No.
+
+
+### 3.9 Does this specification allow an origin access to aspects of a user’s local computing environment?
+
+Not explicitly. However, the UA is free to select which sampling intervals it
 supports- conceivably, a UA could choose a sampling interval "optimal" for
 a device, such as the system clock interrupt interval.
 
-11. Does this specification distinguish between behavior in first-party and
-    third-party contexts (where "first-party" is simply defined as the top-level
-    origin the user theoretically sees in the address bar)?
 
-    **No.**
+### 3.10 Does this specification allow an origin access to other devices?
 
-12. Does this specification expose any other data to an origin that it doesn't
-    currently have access to (e.g. Content Security Policy's violation reports)?
+No.
 
-    **No.** The main concern here would be with cross-origin scripts, whose
-    contents would not be visible to script ordinarily unless, they passed
-    a CORS check. The spec therefore mandates such resources to pass a CORS
-    check in order to be included in profiles.
 
-13. Does this specification create a string-to-script mechanism (e.g. `eval()`
-    or `setTimeout([string], ...)`)?
+### 3.11 Does this specification allow an origin some measure of control over a user agent’s native UI?
 
-    **No.**
+No.
 
-14. Does this specification enable a new script loading/execution mechanism
-    (e.g. HTML Imports)? What about style?
 
-    **No.**
+### 3.12 Does this specification expose temporary identifiers to the web?
 
-15. Does this specification have a "Security Considerations" and "Privacy
-    Considerations" section?
+No.
 
-    **Yes**, work in progress.
 
-[pii]: http://en.wikipedia.org/wiki/Personally_identifiable_information
+### 3.13 Does this specification distinguish between behavior in first-party and third-party contexts?
+
+No.
+
+
+### 3.14 How should this specification work in the context of a user agent’s "incognito" mode?
+
+Semantics should be unchanged.
+
+
+### 3.15 Does this specification persist data to a user’s local device?
+
+No.
+
+
+### 3.16 Does this specification have a "Security Considerations" and "Privacy Considerations" section?
+
+Yes.
+
+
+### 3.17 Does this specification allow downgrading default security characteristics?
+
+No.
