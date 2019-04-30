@@ -50,8 +50,7 @@
       <section class="informative">
         <h2>Examples</h2>
         <pre class="example">
-        const profiler = await performance.profile({ sampleInterval: 10,
-                                                     format: 'json-gzip' });
+        const profiler = await performance.profile({ sampleInterval: 10 });
         for (let i = 0; i &lt; 1000000; i++) {
              doWork();
         }
@@ -93,7 +92,6 @@
           produce higher quality traces.
           </p>
         </li>
-        <li>A <dfn>trace format</dfn>.</li>
         <li>An <dfn data-cite="!HTML#origin">origin</dfn>.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
         <li>A <dfn>sample buffer</dfn> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
@@ -189,12 +187,7 @@
         <ol>
           <li>If the associated <a>profiling session</a>'s state is <code>stopped</code>, return the <a>ProfilerTrace</a> captured by the session.</li>
           <li>Set the <a>profiling session</a>'s state to <code>stopped</code>.</li>
-          <li>
-            <ul>
-              <li>If <a>trace format</a> of the session is <code>"object"</code>, return a <a>ProfilerTrace</a> capturing the session.</li>
-              <li>If <a>trace format</a> of the session is <code>"json-gzip"</code>, return a new ArrayBuffer containing a GZIP representation of the default JSON operation on the <a>ProfilerTrace</a>.</li>
-            </ul>
-          </li>
+          <li>Return a <a>ProfilerTrace</a> from the <a>profiling session</a>.</li>
         </ol>
         <p>
         Any <a>samples</a> taken after <a>stop()</a> is invoked SHOULD NOT be included by the <a>profiling session</a>.
@@ -274,14 +267,8 @@
     <section data-dfn-for="Performance" data-link-for="Performance">
       <h2>Extensions to the <code><dfn data-cite="!HR-TIME-2#dfn-performance">Performance</dfn></code> Interface</h2>
       <pre class="idl">
-      enum ProfilerTraceFormat {
-        "object",
-        "json-gzip",
-      };
-
       dictionary ProfilerInitOptions {
         required DOMHighResTimeStamp sampleInterval;
-        required ProfilerTraceFormat format;
         required unsigned long maxBufferSize;
       };
 
@@ -306,7 +293,6 @@
           <ol>
             <li>The associated <a>global object</a> is set to the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
             <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
-            <li>The associated <a>trace format</a> is set to <a>ProfilerInitOptions.format</a>.</li>
             <li>The associated <a>origin</a> is equal to the origin of the global object's associated environment settings context.</li>
             <li>The associated <a>time origin</a> is equal to the time origin of the global object.</li>
             <li>The associated <a>sample buffer</a> is created with size <a>ProfilerInitOptions.maxBufferSize</a>.</li>
