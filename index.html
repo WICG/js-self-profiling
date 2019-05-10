@@ -197,12 +197,16 @@
     <section data-dfn-for="ProfilerTrace" data-link-for="ProfilerTrace">
       <h2>The <dfn>ProfilerTrace</dfn> Dictionary</h2>
       <pre class="idl">
+      typedef DOMString ProfilerResource;
+
       dictionary ProfilerTrace {
+        required sequence&lt;ProfilerResource&gt; resources;
         required sequence&lt;ProfilerFrame&gt; frames;
         required sequence&lt;ProfilerStack&gt; stacks;
         required sequence&lt;ProfilerSample&gt; samples;
       };
       </pre>
+      <p>The <dfn>resources</dfn> attribute MUST contain exactly all unique URIs captured during the <a>profiling session</a>.</p>
       <p>The <dfn>frames</dfn> attribute MUST contain all frames recorded during the <a>profiling session</a>.</p>
       <p>The <dfn>stacks</dfn> attribute MUST contain all stacks recorded during the <a>profiling session</a>.</p>
       <p>The <dfn>samples</dfn> attribute MUST return all samples recorded during the <a>profiling session</a>, ordered from earliest to latest recorded.</p>
@@ -238,7 +242,7 @@
         <pre class="idl">
         dictionary ProfilerFrame {
           DOMString name;
-          required DOMString uri;
+          required int resourceId;
           required int line;
           required int column;
         };
@@ -255,7 +259,7 @@
               <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
               <li>Otherwise, return <code>null</code>.</li>
             </ul>
-            <li><dfn>uri</dfn> MUST be equal to the URI who contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
+            <li><dfn>resourceId</dfn> MUST be equal to the index of the URI in <a>ProfilerTrace.resources</a> which contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
             <li><dfn>line</dfn> MUST be equal to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
             <li><dfn>column</dfn> MUST be equal to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
         </ul>
