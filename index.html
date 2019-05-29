@@ -169,16 +169,16 @@
       [Exposed=(Window,Worker)]
       interface Profiler {
         readonly attribute DOMHighResTimeStamp sampleInterval;
-        readonly attribute bool stopped;
+        readonly attribute boolean stopped;
         attribute EventHandler onsamplebufferfull;
 
         Promise&lt;ArrayBuffer&gt; stop();
       };
       </pre>
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
-      <p>The <dfn>sampleInterval</dfn> attribute MUST reflect the <a>sample interval</a> of the associated <a>profiling session</a>.
+      <p>The <dfn>sampleInterval</dfn> attribute MUST reflect the <a>sample interval</a> of the associated <a>profiling session</a> expressed as a <dfn data-cite="!hr-time-2#sec-domhighrestimestamp">DOMHighResTimeStamp</dfn>.</p>
       <p>The <dfn>stopped</dfn> attribute MUST be true if and only if the <a>profiling session</a> has state <code>stopped</code>.</p>
-      <p>The <dfn>onsamplebufferfull</dfn> attribute is the event handler for the <a>samplebufferfull</a> event.</p>
+      <p>The <dfn>onsamplebufferfull</dfn> attribute is the <dfn data-cite="!HTML#eventhandler">EventHandler</dfn> for the <a>samplebufferfull</a> event.</p>
       <section>
         <h2><dfn>stop()</dfn> method</h2>
         <p>
@@ -220,7 +220,7 @@
         <pre class="idl">
         dictionary ProfilerSample {
           required DOMHighResTimeStamp timestamp;
-          int stackId;
+          unsigned long long stackId;
         };
         </pre>
         <p>The <dfn>timestamp</dfn> attribute MUST be the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a> when the sample was recorded.</p>
@@ -230,8 +230,8 @@
         <h2>The <dfn>ProfilerStack</dfn> Dictionary</h2>
         <pre class="idl">
         dictionary ProfilerStack {
-          int parentId;
-          required int frameId;
+          unsigned long long parentId;
+          required unsigned long long frameId;
         };
         </pre>
         <p>The <dfn>parentId</dfn> attribute MUST be either <code>null</code> if the associated <a>frame</a> is at the bottom of the <a>stack</a>, OR a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[parentId]</code> is a parent substack containing outer frames.</p>
@@ -242,9 +242,9 @@
         <pre class="idl">
         dictionary ProfilerFrame {
           DOMString name;
-          required int resourceId;
-          required int line;
-          required int column;
+          required unsigned long long resourceId;
+          required unsigned long long line;
+          required unsigned long long column;
         };
         </pre>
         <p>
