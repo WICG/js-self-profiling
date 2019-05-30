@@ -172,7 +172,7 @@
         readonly attribute boolean stopped;
         attribute EventHandler onsamplebufferfull;
 
-        Promise&lt;ArrayBuffer&gt; stop();
+        Promise&lt;ProfilerTrace&gt; stop();
       };
       </pre>
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
