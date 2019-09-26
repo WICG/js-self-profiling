@@ -87,7 +87,7 @@ As with any API that exposes accurate timing information, timing side-channel
 attacks are a risk. We are not aware of any new timing attacks enabled by this
 spec, but further analysis is necessary.
 
-## How to enable this API on your browser (Chrome) or on your site
+## How to enable this API on your browser (Chrome) or on your site
 
 To enable this API on your local Chrome: you need to have Chrome 78 and launch it with this parameter: `--enable-blink-features=ExperimentalJSProfiler`
 
