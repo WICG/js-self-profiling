@@ -87,6 +87,13 @@ As with any API that exposes accurate timing information, timing side-channel
 attacks are a risk. We are not aware of any new timing attacks enabled by this
 spec, but further analysis is necessary.
 
+## How to enable this API on your browser (Chrome) or on your site
+
+To enable this API on your local Chrome: you need to have Chrome 78 and launch it with this parameter: `--enable-blink-features=ExperimentalJSProfiler`
+
+To enable this API on your site, opt-in to this Origin Trial (Chrome 78 to 80, with an end date of March 10th 2020) : https://developers.chrome.com/origintrials/#/register_trial/1346576288583778305
+
+
 ## Profile Format
 
 Space-efficient encodings are possible given the tree-like structure of profile stacks and the repeated strings in function names and filenames. A trie seems like a natural choice. A trie is also desirable because the raw uncompressed memory representation causes huge memory pressure and is more expensive to analyze (e.g. to count stack frequencies).
