@@ -170,7 +170,6 @@
       interface Profiler {
         readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute boolean stopped;
-        attribute EventHandler onsamplebufferfull;
 
         Promise&lt;ProfilerTrace&gt; stop();
       };
@@ -178,7 +177,6 @@
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
       <p>The <dfn>sampleInterval</dfn> attribute MUST reflect the <a>sample interval</a> of the associated <a>profiling session</a> expressed as a <dfn data-cite="!hr-time-2#sec-domhighrestimestamp">DOMHighResTimeStamp</dfn>.</p>
       <p>The <dfn>stopped</dfn> attribute MUST be true if and only if the <a>profiling session</a> has state <code>stopped</code>.</p>
-      <p>The <dfn>onsamplebufferfull</dfn> attribute is the <dfn data-cite="!HTML#eventhandler">EventHandler</dfn> for the <a>samplebufferfull</a> event.</p>
       <section>
         <h2><dfn>stop()</dfn> method</h2>
         <p>
