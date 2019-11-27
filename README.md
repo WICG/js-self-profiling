@@ -55,6 +55,9 @@ Each time the sampling interval has elapsed, the following algorithm is run:
     2. If the realm associated with `ecs` does not match the realm that created the profiler, omit the stack frame.
     3. If the source of the classic script tag associated with `ecs` shares an origin with the browsing context or has the `crossorigin` bit set (and it sends a valid CORS header), record the stack frame.
     4. If the source of the module script tag associated with `ecs` sends a valid CORS header, record the stack frame.
+
+        > 2019-11-27: We're currently exploring requiring [COOP/COEP](https://docs.google.com/document/u/1/d/1zDlfvfTJ_9e8Jdc8ehuV4zMEu9ySMCiTGMS9y0GU92k/edit), which would make this check unnecessary.
+
     5. Otherwise, omit the stack frame.
 4. Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.
 
