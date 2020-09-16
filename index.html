@@ -291,7 +291,7 @@
         </p>
         <ol>
           <li>If <var>options</var>' <a>ProfilerInitOptions.sampleInterval</a> is less than 0, reject the promise with a <code>RangeError</code>.</li>
-          <li>If the requesting document's origin is not allowed to use the <code>"js-profiling"</code> <dfn data-cite="!feature-policy-1#feature-policy">feature policy</dfn>, reject the promise with a <code>"SecurityError"</code> DOMException.</li>
+          <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, reject the promise with a <code>"NotAllowedError"</code> DOMException.</li>
           <li>Create a new <a>profiling session</a> where:</li>
           <ol>
             <li>The associated <a>global object</a> is set to the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
@@ -304,23 +304,20 @@
         </ol>
       </section>
     </section>
-    <section id="feature-policy">
-      <h2>Feature Policy</h2>
+    <section id="document-policy">
+      <h2>Document Policy</h2>
       <p>
-      This specification defines a new <dfn data-cite="!feature-policy-1#policy-controlled-feature">policy-controlled feature</dfn> that controls whether the <a>Performance.profile</a> method may be invoked.
-      </p>
-      <p>
-      The feature identifier for this feature is <code>"js-profiling"</code>.
-      </p>
-      <p>
-      The <dfn data-cite="!feature-policy-1#default-allowlist">default allowlist</dfn> for this feature is <code>"none"</code>.
+      This spec defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> with name <code>js-profiling</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>.
       </p>
       <p class="note">
-      Feature policy is leveraged here to give embedders the ability to control
-      whether or not embedded frames may start profilers, as well as hint to
-      the UA that the page may wish to initialize profiling. The default policy
-      is false to allow JS engines to avoid storing any profiling metadata for
-      documents that do not intend to profile themselves.
+      Document policy is leveraged to give UAs the ability to avoid storing
+      required metadata for profiling when the document does not explicitly
+      request it.  While this metadata could conceivably be generated in
+      response to a profiler being started, we store this bit on the document
+      in order to signal to the engine as early as possible (as profiling early
+      in page load is a common use case). This overhead may be non-trivial
+      depending on the implementation, and therefore we default to
+      <code>false</code>.
       </p>
     </section>
     <section id="privacy-security" class="informative">
