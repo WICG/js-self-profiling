@@ -138,29 +138,8 @@
       <ol>
         <li>Let <var>env</var> be the script execution environment of the profiling session.</li>
         <li>Let <var>stack</var> be the stack of <dfn data-cite="!ECMA-262#sec-execution-contexts">execution contexts</dfn> associated with <var>env</var>.</li>
-        <li>
-          For each execution context <var>ec</var> on <var>stack</var>:
-          <ol>
-            <li>Let <var>ecs</var> be the script associated with <var>ec</var>.</li>
-            <li>If the realm associated with <var>ecs</var> is not equal to the realm of the global object associated with the profiling session, skip.</li>
-            <li>If the origin of the script associated with <var>ecs</var> is not equal to the origin of the browsing context, and its associated script tag (if present) does not pass a CORS check, skip.</li>
-            <li>Otherwise, include the stack frame.</li>
-          </ol>
-          <li>Record a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.</li>
+        <lI>Add a new <a>ProfilerSample</a> to the <a>profiling session</a>'s <a>sample buffer</a>, generating a <a>ProfilerFrame</a> for each <a>execution context</a> in <var>stack</var> and setting <a>ProfilerSample.timestamp</a> accordingly.</li>
       </ol>
-      <section class="informative">
-        <h2>Note on script origins</h2>
-        <p>
-        A origin of an execution context's script (pending formalization) can be mapped into the following cases in lieu of a formal algorithm:
-        </p>
-        <ul>
-          <li>For a classic inline script, the origin is the document containing the script. <em>This holds irrespective of whether the script was injected by a cross-origin script.</em></li>
-          <li>For a classic external script fetched over HTTP, the origin is derived from its URL.</li>
-          <li>For a module script, the origin is derived from its URL.</li>
-          <li>For <code>data:</code> and <code>javascript:</code> URLs, the origin is the origin of the document containing the script tag.</li>
-          <li>For an <code>eval</code>'d script, the origin is the origin of the origin of the source of the containing script. Recurse on this definition.</li>
-        </ul>
-      </section>
     </section>
 
     <section data-dfn-for="Profiler" data-link-for="Profiler">
@@ -290,6 +269,7 @@
         Creates a new <a>Profiler</a> associated with a newly started <a>profiling session</a>. It MUST run these steps:
         </p>
         <ol>
+          <li><a href="HTML5#assert">Assert</a>: The value of <dfn data-cite="!HTML5#cross-origin-isolated">cross-origin isolated</dfn> for the agent cluster of the current realm's agent is <code>true</code>.</li>
           <li>If <var>options</var>' <a>ProfilerInitOptions.sampleInterval</a> is less than 0, reject the promise with a <code>RangeError</code>.</li>
           <li>If the requesting document's origin is not allowed to use the <code>"js-profiling"</code> <dfn data-cite="!feature-policy-1#feature-policy">feature policy</dfn>, reject the promise with a <code>"SecurityError"</code> DOMException.</li>
           <li>Create a new <a>profiling session</a> where:</li>
@@ -328,25 +308,16 @@
       <p>
       The primary concern with profiling JavaScript running on an event loop
       shared by multiple browsing contexts is ensuring that stack frames from
-      cross-origin browsing contexts are not leaked. The spec aims to avoid the
-      leakage of such frames by utilizing a ECMA-262 realm-based filtering
-      approach, allowing isolation of frames in profiling sessions to a single
-      realm / frame to comply with the same-origin policy.
-      </p>
-      <p>
-      Another concern is the leaking of function names from foreign-origin
-      scripts, which wouldn't normally be accessible without the resource
-      participating in CORS. The spec aims to mitigate this by only including
-      such foreign-origin functions if the resource that contains them passes a
-      CORS check. For classic scripts, this means that functions are only
-      included in traces if the <code>crossorigin</code> bit traditionally used
-      for uncensoring <code>Error.stack</code> contents is present in the
-      associated script tag.
+      cross-origin browsing contexts and cross-origin opaque scripts are not
+      leaked. The spec aims to mitigate this by requring cross-origin
+      isolation, providing a mechanism for UAs to ensure that all executed code
+      within an agent cluster is accessible by script.
       </p>
       <p>
       As with any API that exposes accurate timing information, timing
-      side-channel attacks are a risk. We are not aware of any new timing
-      attacks enabled by this spec, but further analysis is necessary.
+      side-channel attacks are a risk. See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>
+      for more context. We encourage UAs to require process isolation in order
+      to mitigate this class of attacks.
       </p>
     </section>
   </body>
