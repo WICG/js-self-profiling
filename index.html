@@ -236,7 +236,7 @@
               <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
               <li>Otherwise, return <code>null</code>.</li>
             </ul>
-            <li><dfn>resourceId</dfn> MUST be equal to the index of the URI in <a>ProfilerTrace.resources</a> which contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
+            <li><dfn>resourceId</dfn> MUST be equal to the index of the <dfn>ProfilerResource</dfn> in <a>ProfilerTrace.resources</a> which contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
             <li><dfn>line</dfn> MUST be equal to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
             <li><dfn>column</dfn> MUST be equal to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
         </ul>
