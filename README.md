@@ -46,23 +46,6 @@ Developers will be able to spin up a new `profiler` via `performance.profile(opt
 
 The returned `profiler` (wrapped in a promise) will begin sampling. The UA may choose a different sample rate than the one that the user requested (which must be the next lowest valid sampling interval), or it may refuse to spin up a profiler for any reason (e.g. if there are too many profilers running concurrently) by rejecting the promise. The true sample rate of the profiler may be accessible via `profiler.options.sampleInterval`.
 
-Each time the sampling interval has elapsed, the following algorithm is run:
-
-1. Let `env` be the script execution environment of the script that started the profiler.
-2. Let `stack` be the stack of execution contexts associated with `env`.
-3. For each execution context `ec` on `stack`:
-    1. Let `ecs` be the script associated with `ec`.
-    2. If the realm associated with `ecs` does not match the realm that created the profiler, omit the stack frame.
-    3. If the source of the classic script tag associated with `ecs` shares an origin with the browsing context or has the `crossorigin` bit set (and it sends a valid CORS header), record the stack frame.
-    4. If the source of the module script tag associated with `ecs` sends a valid CORS header, record the stack frame.
-
-        > 2019-11-27: We're currently exploring requiring [COOP/COEP](https://docs.google.com/document/u/1/d/1zDlfvfTJ_9e8Jdc8ehuV4zMEu9ySMCiTGMS9y0GU92k/edit), which would make this check unnecessary.
-
-    5. Otherwise, omit the stack frame.
-4. Report a new sample with all stack frames recorded in the algorithm, associated with the current timestamp relative to the browsing context's time origin.
-
-    _In a nutshell, this collects data from all stack frames that come from a script that is same-origin or participates in CORS, masking those that do not._
-
 The UA is free to elide any stack frames that may be optimized out (e.g. as a result of inlining).
 
 Calling `profiler.stop()` returns a promise containing a trace object that can be sent to a server for aggregation. This trace is encoded in a trie format similar to the GeckoProfiler and Chrome tracing formats.
@@ -74,21 +57,7 @@ If the sample buffer capacity is reached, the `onsamplebufferfull` event is sent
 The primary concern with profiling JavaScript running on an event loop shared
 by multiple browsing contexts is ensuring that stack frames from cross-origin
 browsing contexts are not leaked. The spec aims to avoid the leakage of such
-frames by utilizing a ECMA-262 realm-based filtering approach, allowing
-isolation of frames in profiling sessions to a single realm / frame to comply
-with the same-origin policy.
-
-Another concern is the leaking of function names from foreign-origin scripts,
-which wouldn't normally be accessible without the resource participating in
-CORS. The spec aims to mitigate this by only including such foreign-origin
-functions if the resource that contains them passes a CORS check. For classic
-scripts, this means that functions are only included in traces if the
-`crossorigin` bit traditionally used for uncensoring `Error.stack` contents is
-present in the associated script tag, and the scripts passes a CORS check.
-
-As with any API that exposes accurate timing information, timing side-channel
-attacks are a risk. We are not aware of any new timing attacks enabled by this
-spec, but further analysis is necessary.
+frames by requiring [cross-origin isolation](https://web.dev/coop-coep/).
 
 ## How to enable this API on your browser (Chrome) or on your site
 
