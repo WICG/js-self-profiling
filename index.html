@@ -82,7 +82,6 @@
       A <dfn>profiling session</dfn> is an abstract producer of <a>samples</a>. Each session has:
       </p>
       <ol>
-        <li>A <dfn data-cite="!HTML#global-object">global object</dfn> as defined in [[HTML]].</li>
         <li>A <dfn>state</dfn>, which is one of <code>{started, paused, stopped}</code>.</li>
         <li>
           A <dfn>sample interval</dfn>, defined as the periodicity at which the session obtains samples.
@@ -277,9 +276,8 @@
           <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, reject the promise with a <code>"NotAllowedError"</code> DOMException.</li>
           <li>Create a new <a>profiling session</a> where:</li>
           <ol>
-            <li>The associated <a>global object</a> is set to the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
             <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
-            <li>The associated <a>time origin</a> is equal to the time origin of the global object.</li>
+            <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
             <li>The associated <a>sample buffer</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
           </ol>
           <li>Return a <code>Promise</code> that yields a <a>Profiler</a> instance once the <a>profiling session</a> has started.</li>
