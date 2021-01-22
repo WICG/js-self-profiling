@@ -92,7 +92,6 @@
           produce higher quality traces.
           </p>
         </li>
-        <li>An <dfn data-cite="!HTML#origin">origin</dfn>.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
         <li>A <dfn>sample buffer</dfn> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
       </ol>
@@ -280,7 +279,6 @@
           <ol>
             <li>The associated <a>global object</a> is set to the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
             <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
-            <li>The associated <a>origin</a> is equal to the origin of the global object's associated environment settings context.</li>
             <li>The associated <a>time origin</a> is equal to the time origin of the global object.</li>
             <li>The associated <a>sample buffer</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
           </ol>
