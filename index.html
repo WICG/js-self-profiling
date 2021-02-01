@@ -303,18 +303,16 @@
     <section id="privacy-security" class="informative">
       <h2>Privacy and Security</h2>
       <p>
-      The primary concern with profiling JavaScript running on an event loop
-      shared by multiple browsing contexts is ensuring that stack frames from
-      cross-origin browsing contexts and cross-origin opaque scripts are not
-      leaked. The spec aims to mitigate this by requring cross-origin
-      isolation, providing a mechanism for UAs to ensure that all executed code
-      within an agent cluster is accessible by script.
+      The primary concerns with introducing a sampling profiling for JavaScript are leakage of execution information across cross-origin execution contexts, leakage of cross-origin scripts, and potential timing attacks.
       </p>
       <p>
-      As with any API that exposes accurate timing information, timing
-      side-channel attacks are a risk. See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>
-      for more context. We encourage UAs to require process isolation in order
-      to mitigate this class of attacks.
+      Implementors must take care to ensure that stack frames from cross-origin execution contexts are not leaked, even when invoked synchronously from the frame that initiates profiling. As script execution information from other contexts could be used to infer the state of these contexts (e.g. whether or not the user is logged in), the spec deems this inpermissible.
+      </p>
+      <p>
+      Including stack frames from functions defined in a cross-origin resource must be performed with caution. The contents of opaque cross-origin scripts should remain inaccessible to UAs, as the resource has not consented to inspection (even with CORP). The spec limits this by requiring all functions included in a trace to be defined in a same-origin resource, or served via CORS.
+      </p>
+      <p>
+      Lastly, timing attacks remain a concern for any API introducing a new source of high-resolution time information. The spec aims to mitigate this by requiring pages to be <a href="!HTML5#cross-origin-isolated">cross-origin isolated</a>, providing UAs with a mechanism to process-isolate pages that perform profiling. See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>.
       </p>
     </section>
   </body>
