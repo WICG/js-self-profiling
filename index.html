@@ -144,7 +144,7 @@
       <h2>The <dfn>Profiler</dfn> Interface</h2>
       <pre class="idl">
       [Exposed=(Window,Worker)]
-      interface Profiler {
+      interface Profiler : EventTarget {
         readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute boolean stopped;
 
