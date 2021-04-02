@@ -91,8 +91,9 @@
           produce higher quality traces.
           </p>
         </li>
+        <li>An <dfn data-cite="!ECMA-262#agent">agent</dfn> to profile.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
-        <li>A <dfn>sample buffer</dfn> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
+        <li>A <a>ProfilerTrace</a> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
       </ol>
       <p>
       Multiple profiling sessions on the same page SHOULD be supported.
@@ -101,7 +102,7 @@
         <h2>States</h2>
         <p>
         In the <code>started</code> state, the UA SHOULD make a best-effort to
-        capture samples by executing the appropriate <a>sampling algorithm</a>
+        capture samples by executing the <a>take a sample</a> algorithm
         each time the <a>sample interval</a> has elapsed.
         In the <code>paused</code> and <code>stopped</code> states, the UA SHOULD NOT capture samples.
         </p>
@@ -120,24 +121,65 @@
         <p>
         A <code>stopped</code> session MUST NOT move to the <code>started</code> or <code>paused</code> states.
         </p>
-        <p>
-        If the number of samples captured by a <code>started</code> session reaches the <a>sample buffer size limit</a>, the session MUST move to the <code>stopped</code> state and a new event of type <dfn>samplebufferfull</dfn> MUST be sent to the event handler associated with the session's associated <a>Profiler</a>.
-        </p>
       </section>
     </section>
     <section>
-      <h2>Sampling Algorithm</h2>
-      <p class="ednote">
-      This section is non-normative for now, the specifics currently being driven by results from a prototype implementation.
-      </p>
+      <h2>Processing Model</h2>
       <p>
-      We define the <dfn>sampling algorithm</dfn> as follows:
+      To <dfn>take a sample</dfn> given a <a>profiling session</a>, perform the following steps:
       </p>
       <ol>
-        <li>Let <var>env</var> be the script execution environment of the profiling session.</li>
-        <li>Let <var>stack</var> be the stack of <dfn data-cite="!ECMA-262#sec-execution-contexts">execution contexts</dfn> associated with <var>env</var>.</li>
-        <lI>Add a new <a>ProfilerSample</a> to the <a>profiling session</a>'s <a>sample buffer</a>, generating a <a>ProfilerFrame</a> for each <a>execution context</a> in <var>stack</var> and setting <a>ProfilerSample.timestamp</a> accordingly.</li>
+        <li>If the length of <a>ProfilerTrace.samples</a> is greater than or equal to the <a>sample buffer size limit</a> associated with the profiling session, fire a new event of type <dfn>samplebufferfull</dfn> to the associated <a>Profiler</a>, move the state to <code>stopped</code>, and return.</li>
+        <li>Let <var>sample</var> be a new <a>ProfilerSample</a>.</li>
+        <li>Set the <a>ProfilerSample.timestamp</a> property of <var>sample</var> to the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a>.</li>
+        <li>Let <var>stack</var> be the <dfn data-cite="!ECMA-262#execution-context-stack">execution context stack</dfn> associated with the profiling session's <a>agent</a>.</li>
+        <li>Set the <a>ProfilerSample.stackId</a> property of <var>sample</var> to the result of the <a>get a stack ID</a> algorithm on <var>stack</var>.</li>
+        <li>Add <var>sample</var> to the <a>ProfilerTrace.samples</a> associated with the session's <a>ProfilerTrace</a>.</li>
       </ol>
+      <p>
+      To <dfn>get a stack ID</dfn> given an <a>execution context stack</a> bound to <var>stack</var>, perform the following steps:
+      <ol>
+        <li>If <var>stack</var> is empty, return <code>undefined</code>.</li>
+        <li>Let <var>head</var> be the top element of <var>stack</var>, and <var>tail</var> be the remainder of <var>stack</var> after removing its top element.</li>
+        <li>Let <var>parentId</var> be the result of calling <a>get a stack ID</a> recursively on <var>tail</var>.</li>
+        <li>Let <var>frameId</var> be the result of calling <a>get a frame ID</a> on <var>head</var>.</li>
+        <li>If <var>frameId</var> is <code>undefined</code>, return <var>parentId</var>.</li>
+        <li>Let <var>profilerStack</var> be a new <a>ProfilerStack</a> with <a>ProfilerStack.frameId</a> equal to <var>frameId</var>, and <a>ProfilerStack.parentId</a> equal to <var>parentId</var>.</a>
+        <li>Return the result of running <a>get an element ID</a> on <var>profilerStack</var> and <a>ProfilerTrace.stacks</a>.</li>
+      </ol>
+      </p>
+      <p>
+      To <dfn>get a frame ID</dfn> given an <dfn data-cite="!ECMA-262#sec-execution-contexts">execution context</dfn> bound to <var>context</var>, perform the following steps:
+      <ol>
+        <li>If the <dfn data-cite="!ECMA-262#realm">realm</dfn> associated with <var>context</var> does not match the realm that created the profiling session, return <code>undefined</code>.</li>
+        <li>If the <dfn data-cite="fetch#concept-response">response</dfn> containing the <code>ScriptOrModule</code> associated with <var>context</var> has a type other than <dfn data-cite="HTML5#cors-same-origin">CORS-same-origin</dfn>, return <code>undefined</code>.</li>
+        <li>Let <var>frame</var> be a new <a>ProfilerFrame</a>.</li>
+        <li>Let <var>instance</var> be equal to the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>context</var>, or <code>null</code>.</li>
+        <li>Set <a>ProfilerFrame.name</a> of <var>frame</var> to the result of running the following algorithm:
+          <ol>
+            <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
+            <li>Otherwise, return <code>null</code>.</li>
+          </ol>
+        </li>
+        <li>
+          Let <var>resourceString</var> be equal to the URL of the <code>ScriptOrModule</code> associated with <var>context</var>.
+          <p class="ednote">
+            We likely ought to make this association more rigorous, particularly for the cases of data URLs and eval.
+          </p>
+        </li>
+        <li>Set <a>ProfilerFrame.resourceId</a> to the result of running <a>get an element ID</a> on <var>resourceString</var> and <a>ProfilerTrace.resources</a>.</li>
+        <li>Set <a>ProfilerFrame.line</a> of <var>frame</var> to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
+        <li>Set <a>ProfilerFrame.column</a> of <var>frame</var> to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
+        <li>Return the result of running <a>get an element ID</a> on <var>frame</var> and <a>ProfilerTrace.frames</a>.</li>
+      </ol>
+      </p>
+      <p>
+      To <dfn>get an element ID</dfn> for an <var>item</var> in a <var>list</var>, run the following steps:
+      <ol>
+        <li>If there exists an element in <var>list</var> component-wise equal to <var>item</var>, return its index.</li>
+        <li>Otherwise, append <var>item</var> to the end of <var>list</var> and return its index.</li>
+      </ol>
+      </p>
     </section>
 
     <section data-dfn-for="Profiler" data-link-for="Profiler">
@@ -198,7 +240,7 @@
           unsigned long long stackId;
         };
         </pre>
-        <p>The <dfn>timestamp</dfn> attribute MUST be the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a> when the sample was recorded.</p>
+        <p>The <dfn>timestamp</dfn> attribute MUST be the <a>current high resolution time</a> relative to the <a>profiling session</a>'s <a>time origin</a> when the sample was recorded.</p>
         <p>If the sample captured a stack, the <dfn>stackId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[stackId]</code> is the leaf <a>stack</a> associated with this <a>sample</a>. Otherwise, it MUST be undefined.</p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
@@ -226,12 +268,12 @@
         Let <var>ec</var> be the <a>execution context</a> that the frame models.
         </p>
         <p>
-        Let <var>instance</var> be the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>ec</var>, or <code>null</code>.
+        Let <var>instance</var> be the <a>function instance</a> associated with <var>ec</var>, or <code>null</code>.
         </p>
         <ul>
           <li><dfn>name</dfn> MUST be equal to the result of running the following algorithm:
             <ul>
-              <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
+              <li>If <var>instance</var> is not <code>null</code>, return the <a>function instance name</a> associated with it.</li>
               <li>Otherwise, return <code>null</code>.</li>
             </ul>
             <li><dfn>resourceId</dfn> MUST be equal to the index of the <dfn>ProfilerResource</dfn> in <a>ProfilerTrace.resources</a> which contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
@@ -254,7 +296,7 @@
       <p><a>ProfilerInitOptions</a> MUST support the following fields:</p>
       <ul>
         <li><dfn>sampleInterval</dfn> is the application's desired <a>sample interval</a>. This value MUST be greater than or equal to zero.</li>
-        <li><dfn>maxBufferSize</dfn> is the desired maximum capacity of the created profiler's <a>sample buffer</a>, in samples.</li>
+        <li><dfn>maxBufferSize</dfn> is the desired maximum capacity of the created profiler's <a>ProfilerTrace</a>, in samples.</li>
       </ul>
     </section>
     <section data-dfn-for="Performance" data-link-for="Performance">
@@ -278,7 +320,7 @@
           <ol>
             <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
             <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
-            <li>The associated <a>sample buffer</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
+            <li>The associated <a>ProfilerTrace</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
           </ol>
           <li>Return a <code>Promise</code> that yields a <a>Profiler</a> instance once the <a>profiling session</a> has started.</li>
         </ol>
