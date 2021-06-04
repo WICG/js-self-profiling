@@ -303,7 +303,7 @@
     <section data-dfn-for="Performance" data-link-for="Performance">
       <h2>Extensions to the <code><dfn data-cite="!HR-TIME-2#dfn-performance">Performance</dfn></code> Interface</h2>
       <pre class="idl">
-      [Exposed=(Window,Worker)]
+      [CrossOriginIsolated, Exposed=(Window,Worker)]
       partial interface Performance {
         Promise&lt;Profiler&gt; profile(ProfilerInitOptions options);
       };
