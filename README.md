@@ -54,10 +54,7 @@ If the sample buffer capacity is reached, the `onsamplebufferfull` event is sent
 
 ## Privacy and Security
 
-The primary concern with profiling JavaScript running on an event loop shared
-by multiple browsing contexts is ensuring that stack frames from cross-origin
-browsing contexts are not leaked. The spec aims to avoid the leakage of such
-frames by requiring [cross-origin isolation](https://web.dev/coop-coep/).
+See the [Privacy and Security](https://wicg.github.io/js-self-profiling/#privacy-security) section of the spec.
 
 ## How to enable this API on your browser (Chrome) or on your site
 
