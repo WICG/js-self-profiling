@@ -303,7 +303,7 @@
     <section data-dfn-for="Performance" data-link-for="Performance">
       <h2>Extensions to the <code><dfn data-cite="!HR-TIME-2#dfn-performance">Performance</dfn></code> Interface</h2>
       <pre class="idl">
-      [CrossOriginIsolated, Exposed=(Window,Worker)]
+      [Exposed=Window]
       partial interface Performance {
         Promise&lt;Profiler&gt; profile(ProfilerInitOptions options);
       };
@@ -314,7 +314,6 @@
         Creates a new <a>Profiler</a> associated with a newly started <a>profiling session</a>. It MUST run these steps:
         </p>
         <ol>
-          <li><a href="HTML5#assert">Assert</a>: The value of <dfn data-cite="!HTML5#cross-origin-isolated">cross-origin isolated</dfn> for the agent cluster of the current realm's agent is <code>true</code>.</li>
           <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, reject the promise with a <code>RangeError</code>.</li>
           <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, reject the promise with a <code>"NotAllowedError"</code> DOMException.</li>
           <li>Create a new <a>profiling session</a> where:</li>
@@ -345,18 +344,30 @@
     </section>
     <section id="privacy-security" class="informative">
       <h2>Privacy and Security</h2>
-      <p>
-      The primary concerns with introducing a sampling profiling for JavaScript are leakage of execution information across cross-origin execution contexts, leakage of cross-origin scripts, and potential timing attacks.
-      </p>
-      <p>
-      Implementors must take care to ensure that stack frames from cross-origin execution contexts are not leaked, even when invoked synchronously from the frame that initiates profiling. As script execution information from other contexts could be used to infer the state of these contexts (e.g. whether or not the user is logged in), the spec deems this inpermissible.
-      </p>
-      <p>
-      Including stack frames from functions defined in a cross-origin resource must be performed with caution. The contents of opaque cross-origin scripts should remain inaccessible to UAs, as the resource has not consented to inspection (even with CORP). The spec limits this by requiring all functions included in a trace to be defined in a same-origin resource, or served via CORS.
-      </p>
-      <p>
-      Lastly, timing attacks remain a concern for any API introducing a new source of high-resolution time information. The spec aims to mitigate this by requiring pages to be <a href="!HTML5#cross-origin-isolated">cross-origin isolated</a>, providing UAs with a mechanism to process-isolate pages that perform profiling. See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>.
-      </p>
+      <p>The following sections detail some of the privacy and security choices of the API, illustrating protection strategies against various types of attacks.</p>
+      <section>
+        <h2>Cross-origin script contents</h2>
+        <p>
+        The API avoids exposing contents of cross-origin scripts by requiring all functions included via the <a>take a sample</a> algorithm to be defined in a script served with <a>CORS-same-origin</a>. Browser builtins (such as <code>performance.now()</code>) may still be included when invoked from cross-origin no-cors script (albeit with no information about the invoking script, line, or column number), although this is already made possible through manually overriding global objects.
+        </p>
+        <p>
+        As a result, the API does not expose any new insight into the contents or execution characteristics of cross-origin script, beyond what is already possible through manual instrumentation. UAs are encouraged to verify this holds if they choose to support extremely low <a>sample interval</a> values (e.g. less than one millisecond).
+        </p>
+      </section>
+      <section>
+        <h2>Cross-origin execution</h2>
+        <p>
+        Cross-origin execution contexts should not be observable by the API through the realm check in the <a>take a sample</a> algorithm. Cross-origin <code>iframes</code> and other execution contexts that share an <a>agent</a> with a profiler will therefore not have their execution observable through this API.
+        </p>
+      </section>
+      <section>
+        <h2>Timing attacks</h2>
+        <p>
+        Timing attacks remain a concern for any API that could introduce a new source of high-resolution timing information. Timestamps gathered in traces should be obtained from the same source as [[?HR-Time]]'s <a>current high resolution time</a> to avoid exposing a new vector for side-channel attacks.
+        <p class="note">
+        See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>.
+        </p>
+      </section>
     </section>
   </body>
 </html>
