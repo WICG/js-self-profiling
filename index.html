@@ -153,7 +153,6 @@
       To <dfn>get a frame ID</dfn> given an <dfn data-cite="!ECMA-262#sec-execution-contexts">execution context</dfn> bound to <var>context</var>, perform the following steps:
       <ol>
         <li>If the <dfn data-cite="!ECMA-262#realm">realm</dfn> associated with <var>context</var> does not match the realm that created the profiling session, return <code>undefined</code>.</li>
-        <li>If the <dfn data-cite="fetch#concept-response">response</dfn> containing the <code>ScriptOrModule</code> associated with <var>context</var> has a type other than <dfn data-cite="HTML5#cors-same-origin">CORS-same-origin</dfn>, return <code>undefined</code>.</li>
         <li>Let <var>frame</var> be a new <a>ProfilerFrame</a>.</li>
         <li>Let <var>instance</var> be equal to the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>context</var>, or <code>null</code>.</li>
         <li>Set <a>ProfilerFrame.name</a> of <var>frame</var> to the result of running the following algorithm:
@@ -162,12 +161,15 @@
             <li>Otherwise, return <code>null</code>.</li>
           </ol>
         </li>
+        <li>Let <var>scriptOrModule</var> be equal to the <code>ScriptOrModule</code> associated with <var>context</var>.</li>
+        <li>Let <var>script</var> be the <dfn data-cite="HTML5#concept-script">script</dfn> obtained from <var>scriptOrModule</var>.[[\HostDefined]].</li>
         <li>
-          Let <var>resourceString</var> be equal to the URL of the <code>ScriptOrModule</code> associated with <var>context</var>.
+          If <var>script</var> is a <dfn data-cite="HTML5#classic-script">classic script</dfn> and its <dfn data-cite="HTML5#muted-errors">muted errors</dfn> boolean is equal to <code>true</code>, return <code>null</code>.
           <p class="ednote">
-            We likely ought to make this association more rigorous, particularly for the cases of data URLs and eval.
-          </p>
+          This check ensures that we avoid including stack frames from cross-origin scripts served in a CORS-cross-origin response. We may want to consider renaming <a>muted errors</a> to better reflect this use case.
+          <p>
         </li>
+        <li>Let <var>resourceString</var> be equal to the <dfn data-cite="HTML5#concept-script-base-url">base URL</dfn> of <var>script</var>.</li>
         <li>Set <a>ProfilerFrame.resourceId</a> to the result of running <a>get an element ID</a> on <var>resourceString</var> and <a>ProfilerTrace.resources</a>.</li>
         <li>Set <a>ProfilerFrame.line</a> of <var>frame</var> to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
         <li>Set <a>ProfilerFrame.column</a> of <var>frame</var> to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
@@ -348,7 +350,7 @@
       <section>
         <h2>Cross-origin script contents</h2>
         <p>
-        The API avoids exposing contents of cross-origin scripts by requiring all functions included via the <a>take a sample</a> algorithm to be defined in a script served with <a>CORS-same-origin</a>. Browser builtins (such as <code>performance.now()</code>) may still be included when invoked from cross-origin no-cors script (albeit with no information about the invoking script, line, or column number), although this is already made possible through manually overriding global objects.
+        The API avoids exposing contents of cross-origin scripts by requiring all functions included via the <a>take a sample</a> algorithm to be defined in a script served with <dfn data-cite="HTML5#cors-same-origin">CORS-same-origin</dfn> through the <a>muted errors</a> property. Browser builtins (such as <code>performance.now()</code>) may still be included when invoked from cross-origin no-cors script (albeit with no information about the invoking script, line, or column number), although this is already made possible through manually overriding global objects.
         </p>
         <p>
         As a result, the API does not expose any new insight into the contents or execution characteristics of cross-origin script, beyond what is already possible through manual instrumentation. UAs are encouraged to verify this holds if they choose to support extremely low <a>sample interval</a> values (e.g. less than one millisecond).
