@@ -50,7 +50,7 @@
       <section class="informative">
         <h2>Examples</h2>
         <pre class="example">
-        const profiler = performance.profile({ sampleInterval: 10 });
+        const profiler = new Profiler({ sampleInterval: 10 });
         for (let i = 0; i &lt; 1000000; i++) {
              doWork();
         }
@@ -193,12 +193,29 @@
         readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute boolean stopped;
 
+        constructor(ProfilerInitOptions options);
         Promise&lt;ProfilerTrace&gt; stop();
       };
       </pre>
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
       <p>The <dfn>sampleInterval</dfn> attribute MUST reflect the <a>sample interval</a> of the associated <a>profiling session</a> expressed as a <dfn data-cite="!hr-time-2#sec-domhighrestimestamp">DOMHighResTimeStamp</dfn>.</p>
       <p>The <dfn>stopped</dfn> attribute MUST be true if and only if the <a>profiling session</a> has state <code>stopped</code>.</p>
+      <section>
+        <h2><dfn data-lt="constructor()">new Profiler(options)</dfn></h2>
+        <a>new Profiler(options)</a> runs the following steps given an object <var>options</var> of type <a>ProfilerInitOptions</a>:
+        <ol>
+            <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
+            <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, throw a <code>"NotAllowedError"</code> DOMException.</li>
+            <li>Create a new <a>profiling session</a> where:</li>
+            <ol>
+              <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
+              <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
+              <li>The associated <a>ProfilerTrace</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
+            </ol>
+            <li>Return a new <a>Profiler</a> associated with the newly created <a>profiling session</a>.</li>
+          </ol>
+        </p>
+      </section>
       <section>
         <h2><dfn>stop()</dfn> method</h2>
         <p>
@@ -301,32 +318,6 @@
         <li><dfn>sampleInterval</dfn> is the application's desired <a>sample interval</a>. This value MUST be greater than or equal to zero.</li>
         <li><dfn>maxBufferSize</dfn> is the desired maximum capacity of the created profiler's <a>ProfilerTrace</a>, in samples.</li>
       </ul>
-    </section>
-    <section data-dfn-for="Performance" data-link-for="Performance">
-      <h2>Extensions to the <code><dfn data-cite="!HR-TIME-2#dfn-performance">Performance</dfn></code> Interface</h2>
-      <pre class="idl">
-      [Exposed=Window]
-      partial interface Performance {
-        Profiler profile(ProfilerInitOptions options);
-      };
-      </pre>
-      <section>
-        <h2><dfn>profile()</dfn> method</h2>
-        <p>
-        Creates a new <a>Profiler</a> associated with a newly started <a>profiling session</a>. It MUST run these steps:
-        </p>
-        <ol>
-          <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
-          <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, throw a <code>"NotAllowedError"</code> DOMException.</li>
-          <li>Create a new <a>profiling session</a> where:</li>
-          <ol>
-            <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
-            <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
-            <li>The associated <a>ProfilerTrace</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
-          </ol>
-          <li>Return a new <a>Profiler</a> associated with the newly created <a>profiling session</a>.</li>
-        </ol>
-      </section>
     </section>
     <section id="document-policy">
       <h2>Document Policy</h2>
