@@ -39,7 +39,7 @@ Finally, several other Web properties with large codebases have expressed intere
 
 ## API Overview
 
-Developers will be able to spin up a new `profiler` via `performance.profile(options)`, where `options` contains the following required fields:
+Developers will be able to spin up a new `profiler` via `new Profiler(options)`, where `options` contains the following required fields:
 
 - Target sample rate
 - Maximum sample capacity
