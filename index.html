@@ -58,10 +58,11 @@
         }
         const duration = performance.now() - start;
         const trace = await profiler.stop();
-        sendTrace({
+        const traceJson = JSON.stringify({
           duration,
           trace,
         });
+        sendTrace(traceJson);
         </pre>
         <p>Another common real-world scenario is profiling JS across a pageload. This example profiles the onload event, sending performance timing data along with the trace.</p>
         <pre class="example" title="Profiling a page load.">
