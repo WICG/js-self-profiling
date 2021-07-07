@@ -262,10 +262,11 @@
         required sequence&lt;ProfilerSample&gt; samples;
       };
       </pre>
-      <p>The <dfn>resources</dfn> attribute MUST contain exactly all unique URLs captured during the <a>profiling session</a>.</p>
-      <p>The <dfn>frames</dfn> attribute MUST contain all frames recorded during the <a>profiling session</a>.</p>
-      <p>The <dfn>stacks</dfn> attribute MUST contain all stacks recorded during the <a>profiling session</a>.</p>
-      <p>The <dfn>samples</dfn> attribute MUST return all samples recorded during the <a>profiling session</a>, ordered from earliest to latest recorded.</p>
+      <p>The <dfn>resources</dfn> attribute MUST return the <dfn>ProfilerResource</dfn> list set by the <a>take a sample</a> algorithm.</p>
+
+      <p>The <dfn>frames</dfn> attribute MUST return the <a>ProfilerFrame</a> list set by the <a>take a sample</a> algorithm.</p>
+      <p>The <dfn>stacks</dfn> attribute MUST return the <a>ProfilerStack</a> list set by the <a>take a sample</a> algorithm.</p>
+      <p>The <dfn>samples</dfn> attribute MUST return the <a>ProfilerSample</a> list set by the <a>take a sample</a> algorithm.</p>
       <p class="note">
       Inspired by the <a href="https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#">V8 trace event format</a>
       and <a href="https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md">Gecko profile format</a>,
@@ -279,8 +280,8 @@
           unsigned long long stackId;
         };
         </pre>
-        <p>The <dfn>timestamp</dfn> attribute MUST be the <a>current high resolution time</a> relative to the <a>profiling session</a>'s <a>time origin</a> when the sample was recorded.</p>
-        <p>If the sample captured a stack, the <dfn>stackId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[stackId]</code> is the leaf <a>stack</a> associated with this <a>sample</a>. Otherwise, it MUST be undefined.</p>
+        <p><dfn>timestamp</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>stackId</dfn> MUST return the value it was initialized to.</p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
         <h2>The <dfn>ProfilerStack</dfn> Dictionary</h2>
@@ -290,8 +291,8 @@
           required unsigned long long frameId;
         };
         </pre>
-        <p>The <dfn>parentId</dfn> attribute MUST be either <code>null</code> if the associated <a>frame</a> is at the bottom of the <a>stack</a>, OR a valid index into the parent <a>ProfilerTrace.stacks</a>, where <code>ProfilerTrace.stacks[parentId]</code> is a parent substack containing outer frames.</p>
-        <p>The <dfn>frameId</dfn> attribute MUST reference a valid index into the parent <a>ProfilerTrace.frames</a>, where <code>ProfilerTrace.frames[frameId]</code> is the <a>frame</a> associated with this <a>stack</a>'s top.</p>
+        <p><dfn>parentId</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>frameId</dfn> MUST return the value it was iniitalized to.</p>
       </section>
       <section data-dfn-for="ProfilerFrame" data-link-for="ProfilerFrame">
         <h2>The <dfn>ProfilerFrame</dfn> Dictionary</h2>
@@ -303,25 +304,10 @@
           required unsigned long long column;
         };
         </pre>
-        <p>
-        Let <var>ec</var> be the <a>execution context</a> that the frame models.
-        </p>
-        <p>
-        Let <var>instance</var> be the <a>function instance</a> associated with <var>ec</var>, or <code>null</code>.
-        </p>
-        <ul>
-          <li><dfn>name</dfn> MUST be equal to the result of running the following algorithm:
-            <ul>
-              <li>If <var>instance</var> is not <code>null</code>, return the <a>function instance name</a> associated with it.</li>
-              <li>Otherwise, return <code>null</code>.</li>
-            </ul>
-            <li><dfn>resourceId</dfn> MUST be equal to the index of the <dfn>ProfilerResource</dfn> in <a>ProfilerTrace.resources</a> which contained the source text of the <dfn data-cite="!ECMA-262#script-record">script record</dfn> or <dfn data-cite="!ECMA-262#sourctextmodule-record">source text module record</dfn> associated with <var>ec</var>.</li>
-            <li><dfn>line</dfn> MUST be equal to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
-            <li><dfn>column</dfn> MUST be equal to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
-        </ul>
-        <p class="ednote">
-          A more rigorous definition needs to be applied to the line and column attributes, particularly to define them for inline, eval, and toplevel scripts.
-        </p>
+        <p><dfn>name</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>resourceId</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>line</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>column</dfn> MUST return the value it was initialized to.</p>
       </section>
     </section>
     <section data-dfn-for="ProfilerInitOptions" data-link-for="ProfilerInitOptions">
