@@ -116,7 +116,8 @@
         </li>
         <li>An <dfn data-cite="!ECMA-262#agent">agent</dfn> to profile.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
-        <li>A <a>ProfilerTrace</a> storing captured <a>samples</a>, with a finite <dfn>sample buffer size limit</dfn>.</li>
+        <li>A <dfn>sample buffer size limit</dfn>.</li>
+        <li>A <a>ProfilerTrace</a> storing captured <a>samples</a>.</li>
       </ol>
       <p>
       Multiple profiling sessions on the same page SHOULD be supported.
@@ -229,7 +230,8 @@
             <ol>
               <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
               <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
-              <li>The associated <a>ProfilerTrace</a> is created with size <var>options</var>' {{ProfilerInitOptions/maxBufferSize}}.</li>
+              <li>The associated <a>sample buffer size limit</a> is set to {{ProfilerInitOptions/maxBufferSize}}.</li>
+              <li>The associated <a>ProfilerTrace</a> is set to <code>«[{{ProfilerTrace/resources}} → «», {{ProfilerTrace/frames}} → «», {{ProfilerTrace/stacks}} → «», {{ProfilerTrace/samples}} → «»]»</code>.</li>
             </ol>
             <li>Return a new <a>Profiler</a> associated with the newly created <a>profiling session</a>.</li>
           </ol>
@@ -321,7 +323,7 @@
       <p><a>ProfilerInitOptions</a> MUST support the following fields:</p>
       <ul>
         <li><dfn>sampleInterval</dfn> is the application's desired <a>sample interval</a>. This value MUST be greater than or equal to zero.</li>
-        <li><dfn>maxBufferSize</dfn> is the desired maximum capacity of the created profiler's <a>ProfilerTrace</a>, in samples.</li>
+        <li><dfn>maxBufferSize</dfn> is the desired <a>sample buffer size limit</a>, in samples.</li>
       </ul>
     </section>
     <section id="document-policy">
