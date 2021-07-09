@@ -23,7 +23,7 @@
         ],
         shortName: "js-self-profiling",
         group: "wicg",
-        xref: ["DOM", "WebIDL"],
+        xref: ["DOM", "Infra", "WebIDL"],
         github: "https://github.com/WICG/js-self-profiling/"
       };
     </script>
@@ -341,6 +341,45 @@
       depending on the implementation, and therefore we default to
       <code>false</code>.
       </p>
+    </section>
+    <section>
+      <h2>Automation</h2>
+      <p>
+      For the purposes of user-agent automation and application testing, this document defines the following [[WebDriver]] <a data-cite="webdriver#dfn-extension-command">extension command</a>.
+      </p>
+      <section>
+        <h2>Force Sample</h2>
+        <table class="data">
+          <thead>
+            <tr>
+              <th>HTTP Method</th>
+              <th>URI Template</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>POST</td>
+              <td>`/session/{session id}/forcesample`</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+        The <dfn>Force Sample</dfn> <a data-cite="webdriver#dfn-extension-command">extension command</a> forces all [=profiling sessions=] to [=take a sample=] for the purpose of enabling more deterministic testing.
+        </p>
+        <p>
+        The <a data-cite="webdriver#dfn-remote-end-steps">remote end steps</a> are:
+        <ol>
+          <li>Let |sessions:list| be a [=list=] of all [=profiling sessions=] created in the <a data-cite="webdriver#dfn-current-browsing-context">current browsing context</a>.</li>
+          <li>
+            For each |session:profiling session| of |sessions|:
+            <ol>
+              <li>If the [=state=] of |session| is <code>started</code>, [=take a sample=] with |session|.</li>
+            </ol>
+          </li>
+          <li>Return <a data-cite="webdriver#dfn-success">success</a> with data <code>null</code>.</li>
+        </ol>
+        </p>
+      </section>
     </section>
     <section id="privacy-security" class="informative">
       <h2>Privacy and Security</h2>
