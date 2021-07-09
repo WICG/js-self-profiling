@@ -115,6 +115,7 @@
           </p>
         </li>
         <li>An <dfn data-cite="!ECMA-262#agent">agent</dfn> to profile.</li>
+        <li>A <dfn data-cite="!ECMA-262#realm">realm</dfn> to profile.</li>
         <li>A <dfn data-cite="!HR-TIME-2#dfn-time-origin">time origin</dfn> that samples' timestamps are measured relative to.</li>
         <li>A <dfn>sample buffer size limit</dfn>.</li>
         <li>A <a>ProfilerTrace</a> storing captured <a>samples</a>.</li>
@@ -172,7 +173,7 @@
       <p>
       To <dfn>get a frame ID</dfn> given an <dfn data-cite="!ECMA-262#sec-execution-contexts">execution context</dfn> bound to <var>context</var>, perform the following steps:
       <ol>
-        <li>If the <dfn data-cite="!ECMA-262#realm">realm</dfn> associated with <var>context</var> does not match the realm associated with the profiling session, return <code>undefined</code>.</li>
+        <li>If the [= realm =] associated with <var>context</var> does not match the realm associated with the profiling session, return <code>undefined</code>.</li>
         <li>Let <var>frame</var> be a new <a>ProfilerFrame</a>.</li>
         <li>Let <var>instance</var> be equal to the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>context</var>, or <code>null</code>.</li>
         <li>Set <a>ProfilerFrame.name</a> of <var>frame</var> to the result of running the following algorithm:
