@@ -6,6 +6,8 @@
 
 Discussion in GitHub issues + [WICG discourse thread](https://discourse.wicg.io/t/proposal-an-api-to-allow-webpage-javascript-to-profile-its-own-performance/2818)
 
+[Web Platform Tests](https://wpt.fyi/results/js-self-profiling?label=experimental&label=master&aligned)
+
 ## Motivation
 
 Currently it is difficult for web developers to understand how their applications perform in the wide variety of conditions encountered on real user devices. A programmable JS profiling API is needed to collect JS profiles from real end-user environments.
@@ -14,7 +16,7 @@ A native self-profiling API for JS code would also allow web developers to effic
 
 Currently JS self-profiling can be accomplished by instrumenting individual JS functions with timing code but this is cumbersome, bloats JS size, changes the code (potentially altering performance characteristics), adds overhead from timing calls, and risks missing out on hotspots in unexpected corners.
 
-## Facebook's Profiler Polyfill
+### Facebook's Profiler Polyfill
 
 In an attempt to polyfill the missing self-profiling functionality, Facebook built and deployed its own in-page JS profiler implemented with JavaScript and SharedArrayBuffers. This JS profiler was implemented using a worker thread that signaled to the main thread when it needed to record its current stack. The worker thread would toggle a “capture stack now” flag in a SharedArrayBuffer every few milliseconds, and the value of this flag was read by instrumentation code that was inserted at transpilation time into the beginning of interesting JS functions running on the main thread. If the instrumentation code saw that the flag was set, it would capture the current JS stack (using the Error object) and add it to the running profile.
 
@@ -29,7 +31,7 @@ This polyfill implementation had some downsides:
 
 A browser-implemented profiling API would avoid these downsides.
 
-## Wider Industry Interest
+### Wider Industry Interest
 
 It is cumbersome to manage instrumentation for performance measurement, regardless of whether it is inserted by build-time tooling (like Facebook's polyfill above) or inserted by hand in functions of interest. This API eliminates the need to maintain performance instrumentation and therefore allows smaller sites to deploy in-page JS profiling.
 
@@ -39,30 +41,55 @@ Finally, several other Web properties with large codebases have expressed intere
 
 ## API Overview
 
-Developers will be able to spin up a new `profiler` via `new Profiler(options)`, where `options` contains the following required fields:
+Before developers can make use of the profiler, they'll first have to signal to the UA that they wish to profile by exposing the `Document-Policy: js-profiling` header.
 
-- Target sample rate
-- Maximum sample capacity
+> This header ensures that any UA-specific profiling overhead is incurred only on loads that may profile.
 
-The returned `profiler` (wrapped in a promise) will begin sampling. The UA may choose a different sample rate than the one that the user requested (which must be the next lowest valid sampling interval), or it may refuse to spin up a profiler for any reason (e.g. if there are too many profilers running concurrently) by rejecting the promise. The true sample rate of the profiler may be accessible via `profiler.options.sampleInterval`.
+Developers will then be able to spin up a new `profiler` via `new Profiler(options)`, where `options` contains the following required fields:
 
-The UA is free to elide any stack frames that may be optimized out (e.g. as a result of inlining).
+- `sampleInterval`: Target sample rate (in ms per sample)
+  - The UA may choose a different sample rate than the one that the user requested (which must be the next lowest valid sampling interval).
+    - The true sample rate of the profiler may be accessible via `profiler.sampleInterval`.
+- `maxBufferSize`: Maximum sample capacity (in samples)
+  - If the sample buffer capacity is reached, the `samplebufferfull` event is sent to the `profiler` object. This stops profiling immediately.
+    - The trace may still be collected via `profiler.stop()` when this occurs.
 
-Calling `profiler.stop()` returns a promise containing a trace object that can be sent to a server for aggregation. This trace is encoded in a trie format similar to the GeckoProfiler and Chrome tracing formats.
+Creating a new profiler starts profiling immediately. Once the developer wishes to stop profiling, calling `profiler.stop()` returns a promise containing a trace object that can be sent to a server for aggregation.
 
-If the sample buffer capacity is reached, the `onsamplebufferfull` event is sent to the `profiler` object. This stops profiling immediately. The trace may still be collected via `profiler.stop()` when this occurs.
+> This trace is encoded in a trie format similar to the GeckoProfiler and Chrome tracing formats -- see the appendix for an overview of how stacks are represented.
+
+An example of how you might want to profile a pageload for server-side analysis is below:
+
+```javascript
+const profiler = new Profiler({
+  sampleInterval: 10,      // Target sampling every 10ms
+  maxBufferSize: 10 * 100, // Cap at ~10s worth of samples
+});
+
+async function collectAndSendTrace() {
+  if (profiler.stopped) return;
+
+  const trace = await profiler.stop();
+  const traceJson = JSON.stringify({
+    timing: performance.timing,
+    trace,
+  });
+
+  // Send the trace JSON to a server via Fetch/XHR
+  sendTrace(traceJson);
+}
+
+profiler.addEventListener('samplebufferfull', collectAndSendTrace);
+window.addEventListener('load', collectAndSendTrace);
+
+// Rest of the page's JS initialization logic
+```
 
 ## Privacy and Security
 
 See the [Privacy and Security](https://wicg.github.io/js-self-profiling/#privacy-security) section of the spec.
 
-## How to enable this API on your browser (Chrome) or on your site
-
-To enable this API on your local Chrome: you need to have Chrome 78 and launch it with this parameter: `--enable-blink-features=ExperimentalJSProfiler`
-
-To enable this API on your site, opt-in to this Origin Trial (Chrome 78 to 80, with an end date of March 10th 2020) : https://developers.chrome.com/origintrials/#/register_trial/1346576288583778305
-
-## Profile Format
+## Appendix: Profile Format
 
 Space-efficient encodings are possible given the tree-like structure of profile stacks and the repeated strings in function names and filenames. A trie seems like a natural choice. A trie is also desirable because the raw uncompressed memory representation causes huge memory pressure and is more expensive to analyze (e.g. to count stack frequencies).
 
@@ -75,60 +102,64 @@ Thus, we propose the following trie-based trace format, to be returned as either
 
 ```javascript
 {
-   "stacks" : [
-      {
-         "frameId" : 0
-      },
-      {
-         "frameId" : 1,
-         "parentId" : 0
-      },
-      {
-         "frameId" : 2,
-         "parentId" : 1
-      },
-   ],
-   "samples" : [
-      {
-         "timestamp" : 1551.73499998637,
-         "stackId": 2
-      },
-      {
-         "timestamp" : 1576.83999999426,
-         "stackId": 1,
-      },
-      {
-         "timestamp" : 1601.90499993041
-      },
-   ],
-   "frames" : [
-      {
-         "name" : "b",
-         "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3/yW/r/ZgaPtFDHPeq.js",
-         "line" : 23,
-         "column" : 169,
-      },
-      {
-         "name" : "l",
-         "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js",
-         "line" : 313,
-         "column" : 468,
-      },
-      {
-         "uri" : "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js",
-         "line" : 313,
-         "name" : "a",
-         "column" : 1325
-      },
-   ]
+  "resources" : [
+    "https://static.xx.fbcdn.net/rsrc.php/v3/yW/r/ZgaPtFDHPeq.js",
+    "https://static.xx.fbcdn.net/rsrc.php/v3iMKu4/yW/l/en_US-i/gSq3sO3PcU1.js"
+  ],
+  "stacks" : [
+    {
+      "frameId" : 0
+    },
+    {
+      "frameId" : 1,
+      "parentId" : 0
+    },
+    {
+      "frameId" : 2,
+      "parentId" : 1
+    }
+  ],
+  "samples" : [
+    {
+      "timestamp" : 1551.73499998637,
+      "stackId": 2
+    },
+    {
+      "timestamp" : 1576.83999999426,
+      "stackId": 1
+    },
+    {
+      "timestamp" : 1601.90499993041
+    }
+  ],
+  "frames" : [
+    {
+      "name" : "b",
+      "resourceId" : 0,
+      "line" : 23,
+      "column" : 169
+    },
+    {
+      "name" : "l",
+      "resourceId": 1,
+      "line" : 313,
+      "column" : 468
+    },
+    {
+      "name" : "a",
+      "resourceId": 1,
+      "line" : 313,
+      "column" : 1325
+    }
+  ]
 }
 ```
 
-## Visualization
+### Visualization
 
 Mozilla's perf.html visualization tool for Firefox profiles or Chrome's trace-viewer (chrome://tracing) UI could be trivially adapted to visualize the data produced by this profiling API.
 
-## perf.html
+### perf.html
 
 As an illustration, a screenshot below from Mozilla's perf.html project shows the JS stack aggregation and timeline. It is able to show gaps where JavaScript was not executing, areas where there were long running events (red), and an aggregate view of the samples in the selected time range such as the 15 contiguous samples in function 'user.ts' highlighted in the screenshot below.
 
