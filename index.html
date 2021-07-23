@@ -51,7 +51,7 @@
         <h2>Examples</h2>
         <p>The following example demonstrates how a user may profile an expensive operation, gathering JS execution samples every 10ms. The trace can be sent to a server for analysis to debug outliers and JS execution characteristics in aggregate.</p>
         <pre class="example" title="Profiling a computationally-intensive operation.">
-        const profiler = new Profiler({ sampleInterval: 10 });
+        const profiler = new Profiler({ sampleInterval: 10, maxBufferSize: 10000 });
         const start = performance.now();
         for (let i = 0; i &lt; 1000000; i++) {
              doWork();
@@ -66,7 +66,7 @@
         </pre>
         <p>Another common real-world scenario is profiling JS across a pageload. This example profiles the onload event, sending performance timing data along with the trace.</p>
         <pre class="example" title="Profiling a page load.">
-        const profiler = new Profiler({ sampleInterval: 10 });
+        const profiler = new Profiler({ sampleInterval: 10, maxBufferSize: 10000 });
 
         window.addEventListener('load', async () => {
           const trace = await profiler.stop();
