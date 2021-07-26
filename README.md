@@ -2,7 +2,7 @@
 
 - [Specification](https://wicg.github.io/js-self-profiling)
 - [Web Platform Tests](https://wpt.fyi/results/js-self-profiling?label=experimental&label=master&aligned)
-- Slides and minutes from TPAC [2018](https://docs.google.com/document/d/1bYMLTkjcyOZR5Jt3vrulzMSoS32zOFtwyH33f6hW_C8/edit#heading=h.se3632b9q5z), [2019](https://docs.google.com/document/d/1-xMvUHAjqhQdegNqupxlqsLbfPHWq5MJ0iySg9Z1KBs/edit#), [2020](https://docs.google.com/document/d/1inejuvPONXPOLKTCcUzOBhPh6QOckMcltnR-E3xyZVQ/edit#)
+- Slides and minutes from TPAC [2018](https://docs.google.com/document/d/1bYMLTkjcyOZR5Jt3vrulzMSoS32zOFtwyH33f6hW_C8/edit#heading=h.se3632b9q5z), [2019](https://docs.google.com/document/d/1-xMvUHAjqhQdegNqupxlqsLbfPHWq5MJ0iySg9Z1KBs/edit#heading=h.uq5au3okuh8b), [2020](https://docs.google.com/document/d/1inejuvPONXPOLKTCcUzOBhPh6QOckMcltnR-E3xyZVQ/edit#heading=h.9uskdhbxdwkg)
 - GitHub issues + [WICG discourse thread](https://discourse.wicg.io/t/proposal-an-api-to-allow-webpage-javascript-to-profile-its-own-performance/2818)
 
 ## Motivation
