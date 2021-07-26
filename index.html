@@ -249,9 +249,17 @@
         Stops the profiler and returns a trace. This method MUST run these steps:
         </p>
         <ol>
-          <li>If the associated <a>profiling session</a>'s state is <code>stopped</code>, return the <a>ProfilerTrace</a> captured by the session.</li>
-          <li>Set the <a>profiling session</a>'s state to <code>stopped</code>.</li>
-          <li>Return a <a>ProfilerTrace</a> from the <a>profiling session</a>.</li>
+          <li>If the associated [= profiling session =]'s state is <code>stopped</code>, return [= a promise rejected with =] an <code>"InvalidStateError"</code> DOMException.
+          <li>Set the [= profiling session =]'s state to <code>stopped</code>.</li>
+          <li>Let |p:Promise| be [= a new promise =].</li>
+          <li>
+            Run the following steps [= in parallel =]:
+            <ol>
+              <li>Perform any [= implementation-defined =] work to stop the [= profiling session =].</li>
+              <li>Resolve |p| with the {{ProfilerTrace}} associated with the profiler's [= profiling session =].</li>
+            </ol>
+          </li>
+          <li>Return |p|.</li>
         </ol>
         <p>
         Any <a>samples</a> taken after <a>stop()</a> is invoked SHOULD NOT be included by the <a>profiling session</a>.
