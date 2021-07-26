@@ -88,14 +88,14 @@ See the [Privacy and Security](https://wicg.github.io/js-self-profiling/#privacy
 
 ## Appendix: Profile Format
 
-Space-efficient encodings are possible given the tree-like structure of profile stacks and the repeated strings in function names and filenames. A trie seems like a natural choice. A trie is also desirable because the raw uncompressed memory representation causes huge memory pressure and is more expensive to analyze (e.g. to count stack frequencies).
-
-There are examples of trie-based approaches in browsers today:
+A trie-like approach is chosen for representing traces obtained from the profiler. There are examples of trie-based approaches in browsers today:
 
 * [Chrome's Trace Event format, specifically the stackFrames field](https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.yr703knxre9f)
 * [Firefox's Gecko Profiler format, specifically the stackTable field](https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md#source-data-format)
 
-Thus, we propose the following trie-based trace format, to be returned as either a standard JS dictionary or in a gzipped representation depending on the `format` argument (see spec).
+The API aims to provide deduplication of script resource URLs, stack frames, and stack sequences (through the aforementioned trie approach) to reduce memory pressure and trace size when sent over the network.
+
+The specification's processing model provides detail on how these traces are constructed. An example (encoded in JSON) can be found below:
 
 ```javascript
 {
@@ -151,6 +151,8 @@ Thus, we propose the following trie-based trace format, to be returned as either
   ]
 }
 ```
+
+The API may also be combined with other APIs such as [Compression Streams](https://wicg.github.io/compression/) in order to further reduce trace size.
 
 ### Visualization
 
