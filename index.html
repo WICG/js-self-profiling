@@ -175,25 +175,27 @@
       <ol>
         <li>If the [= realm =] associated with <var>context</var> does not match the realm associated with the profiling session, return <code>undefined</code>.</li>
         <li>Let <var>frame</var> be a new <a>ProfilerFrame</a>.</li>
-        <li>Let <var>instance</var> be equal to the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>context</var>, or <code>null</code>.</li>
-        <li>Set <a>ProfilerFrame.name</a> of <var>frame</var> to the result of running the following algorithm:
-          <ol>
-            <li>If <var>instance</var> is not <code>null</code>, return the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with it.</li>
-            <li>Otherwise, return <code>null</code>.</li>
-          </ol>
-        </li>
+        <li>Let <var>instance</var> be equal to the <dfn data-cite="!ECMA-262#sec-function-instances">function instance</dfn> associated with <var>context</var>.</li>
+        <li>Set <a>ProfilerFrame.name</a> of <var>frame</var> to the <dfn data-cite="!ECMA-262#sec-function-instances-name">function instance name</dfn> associated with |instance|.</li>
         <li>Let <var>scriptOrModule</var> be equal to the <code>ScriptOrModule</code> associated with <var>context</var>.</li>
-        <li>Let <var>script</var> be the <dfn data-cite="HTML5#concept-script">script</dfn> obtained from <var>scriptOrModule</var>.[[\HostDefined]].</li>
         <li>
-          If <var>script</var> is a <dfn data-cite="HTML5#classic-script">classic script</dfn> and its <dfn data-cite="HTML5#muted-errors">muted errors</dfn> boolean is equal to <code>true</code>, return <code>null</code>.
+          If |scriptOrModule| is non-null:
           <p class="ednote">
-          This check ensures that we avoid including stack frames from cross-origin scripts served in a CORS-cross-origin response. We may want to consider renaming <a>muted errors</a> to better reflect this use case.
-          <p>
-        </li>
-        <li>Let <var>resourceString</var> be equal to the <dfn data-cite="HTML5#concept-script-base-url">base URL</dfn> of <var>script</var>.</li>
-        <li>Set <a>ProfilerFrame.resourceId</a> to the result of running <a>get an element ID</a> on <var>resourceString</var> and <a>ProfilerTrace.resources</a>.</li>
-        <li>Set <a>ProfilerFrame.line</a> of <var>frame</var> to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
-        <li>Set <a>ProfilerFrame.column</a> of <var>frame</var> to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
+          Builtin functions have a null <code>ScriptOrModule</code>.
+          </p>
+          <ol>
+            <li>Let <var>script</var> be the <dfn data-cite="HTML5#concept-script">script</dfn> obtained from <var>scriptOrModule</var>.[[\HostDefined]].</li>
+            <li>
+              If <var>script</var> is a <dfn data-cite="HTML5#classic-script">classic script</dfn> and its <dfn data-cite="HTML5#muted-errors">muted errors</dfn> boolean is equal to <code>true</code>, return <code>null</code>.
+              <p class="ednote">
+              This check ensures that we avoid including stack frames from cross-origin scripts served in a CORS-cross-origin response. We may want to consider renaming <a>muted errors</a> to better reflect this use case.
+              <p>
+            </li>
+            <li>Let <var>resourceString</var> be equal to the <dfn data-cite="HTML5#concept-script-base-url">base URL</dfn> of <var>script</var>.</li>
+            <li>Set <a>ProfilerFrame.resourceId</a> to the result of running <a>get an element ID</a> on <var>resourceString</var> and <a>ProfilerTrace.resources</a>.</li>
+            <li>Set <a>ProfilerFrame.line</a> of <var>frame</var> to the 1-based index of the line at which <var>instance</var> is defined in its containing script.</li>
+            <li>Set <a>ProfilerFrame.column</a> of <var>frame</var> to the 1-based index of the column at which <var>instance</var> is defined in its containing script.</li>
+          </ol>
         <li>Return the result of running <a>get an element ID</a> on <var>frame</var> and <a>ProfilerTrace.frames</a>.</li>
       </ol>
       </p>
@@ -314,10 +316,10 @@
         <h2>The <dfn>ProfilerFrame</dfn> Dictionary</h2>
         <pre class="idl">
         dictionary ProfilerFrame {
-          DOMString name;
-          required unsigned long long resourceId;
-          required unsigned long long line;
-          required unsigned long long column;
+          required DOMString name;
+          unsigned long long resourceId;
+          unsigned long long line;
+          unsigned long long column;
         };
         </pre>
         <p><dfn>name</dfn> MUST return the value it was initialized to.</p>
