@@ -82,6 +82,10 @@ window.addEventListener('load', collectAndSendTrace);
 // Rest of the page's JS initialization logic
 ```
 
+## Markers Extensions
+
+See [markers](markers.md) for detailed description of the proposal.
+
 ## Privacy and Security
 
 See the [Privacy and Security](https://wicg.github.io/js-self-profiling/#privacy-security) section of the spec.
