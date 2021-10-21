@@ -327,7 +327,7 @@ Does not expose data about the underlying platform.
 ` platform?`
 No.
 ` 08. Do features in this specification enable access to device sensors?`
-` `No.
+No.
 ` 09. What data do the features in this specification expose to an origin? Please`
 ` also document what data is identical to data exposed by other features, in the`
 ` same or different contexts.`
