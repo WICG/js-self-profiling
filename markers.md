@@ -302,3 +302,60 @@ Using the same GC example the trace would be presented like this:
         }
 }
 ```
+
+## Security and Privacy questionnaire
+
+`01. What information might this feature expose to Web sites or other parties,`
+` and for what purposes is that exposure necessary?`
+This feature exposes user agent work on the main thread during a trace captured with JS Self Profiling API. This information is limited to high level categories of work that help web developers understand and improve the performance of their application.
+` 02. Do features in your specification expose the minimum amount of information`
+` necessary to enable their intended uses?`
+Yes.
+` 03. How do the features in your specification deal with personal information,`
+` personally-identifiable information (PII), or information derived from`
+` them?`
+Does not expose PIIs.
+` 04. How do the features in your specification deal with sensitive information?`
+Does not expose sensitive information.
+` 05. Do the features in your specification introduce new state for an origin`
+` that persists across browsing sessions?`
+No.
+` 06. Do the features in your specification expose information about the`
+` underlying platform to origins?`
+Does not expose data about the underlying platform.
+` 07. Does this specification allow an origin to send data to the underlying`
+` platform?`
+No.
+` 08. Do features in this specification enable access to device sensors?`
+No.
+` 09. What data do the features in this specification expose to an origin? Please`
+` also document what data is identical to data exposed by other features, in the`
+` same or different contexts.`
+There is concern for a class of user agent work that may be shared across origins. Currently only Garbage collection event is concerned by this and may be mitigated by requesting cross-origin isolation.
+Other events are only exposed if the active profiler belongs to the same origin.
+` 10. Do features in this specification enable new script execution/loading`
+` mechanisms?`
+No.
+` 11. Do features in this specification allow an origin to access other devices?`
+No.
+` 12. Do features in this specification allow an origin some measure of control over`
+` a user agent's native UI?`
+No.
+` 13. What temporary identifiers do the features in this specification create or`
+` expose to the web?`
+No temporary identifier created.
+` 14. How does this specification distinguish between behavior in first-party and`
+` third-party contexts?`
+No distinction.
+` 15. How do the features in this specification work in the context of a browser’s`
+` Private Browsing or Incognito mode?`
+Semantics should be unchanged.
+` 16. Does this specification have both "Security Considerations" and "Privacy`
+` Considerations" sections?`
+Yes.
+` 17. Do features in your specification enable origins to downgrade default`
+` security protections?`
+No.
+` 18. How does your feature handle non-"fully active" documents?`
+The JS Self Profiling API only capture samples from the Main thread and does not interact with non-fully active documents.
+` 19. What should this questionnaire have asked?`
