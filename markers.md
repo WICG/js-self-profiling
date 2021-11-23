@@ -122,7 +122,7 @@ trace with markers:
     }
 ```
 
-### Report layout trashing.
+### Report layout thrashing.
 
 Some properties or methods may trigger the browser to recompute the style or layout. 
 Without a marker tagging a sample for a render operation, there is no easy way to differentiate script execution from a rendering operation.
