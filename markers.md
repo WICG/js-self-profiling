@@ -245,9 +245,7 @@ Trace with markers:
 
 Careful consideration must be taken to avoid leaking top level UA work performed on a cross-origin document. UAs must only expose a marker if the responsible document for the work is same-origin with the profiler.
 
-There is a risk to introduce a new source of side channel  information through this API. A detailed security review must be performed to identify the type of work and the level of granularity that is permissible to expose through this API.
-
-Special consideration must also be given to events that are not directly attributable to an origin such as potentially Garbage Collection. If it is not deemed permissible to expose such events, we could consider requesting cross-origin isolation to add the marker information.
+There is a risk to introduce a new source of side channel information through this API. Specifically, the timings of cross-origin opaque resources owned by the document that do not pass a Timing-Allow-Origin check or the timings of cross-origin documents hosted by the same process. To mitigate these risks, the marker extension may only be accessible in a cross-origin isolated environment.
 
 Additional checks may also be required by user agents to implement this feature.
 ## Considered alternatives
