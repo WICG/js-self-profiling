@@ -245,7 +245,7 @@ Trace with markers:
 
 Careful consideration must be taken to avoid leaking top level UA work performed on a cross-origin document. UAs must only expose a marker if the responsible document for the work is same-origin with the profiler.
 
-There is a risk to introduce a new source of side channel information through this API. Specifically, the timings of cross-origin opaque resources owned by the document that do not pass a Timing-Allow-Origin check or the timings of cross-origin documents hosted by the same process. To mitigate these risks, the marker extension may only be accessible in a cross-origin isolated environment.
+There is a risk to introduce a new source of side channel information through this API. Specifically, the timings of cross-origin opaque resources owned by the document that do not pass a Timing-Allow-Origin check or the timings of cross-origin documents hosted by the same process. To mitigate this risk, a Sample's marker attribute may only be accessible when the current Realm's settings objects's cross-origin isolated capability boolean is set to true.
 
 Additional checks may also be required by user agents to implement this feature.
 ## Considered alternatives
