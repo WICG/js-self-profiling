@@ -71,7 +71,7 @@ enum ProfilerMarker { "script", "gc", "style", "layout", "paint", "other" };
 dictionary ProfilerSample {
   required DOMHighResTimeStamp timestamp;
   unsigned long long stackId;
-  ProfilerMarker? marker;
+  [CrossOriginIsolated] ProfilerMarker? marker;
 };
 ```
 
