@@ -5,6 +5,8 @@
 It is difficult to analyze a trace without visibility into the context around it and the events competing for the UI thread such as rendering or painting.
 By adding markers to the captured samples, web developers will be able to correlate slow traces with the browser activity.
 
+End-users will benefit from faster and more efficient websites by giving the tools to web-developers to understand how their application performs on conditions encountered on real user devices.
+
 ## Goals 
 
 * Being able to identify the browser activity at the time the sample was captured
