@@ -38,11 +38,7 @@ Finally, several other Web properties with large codebases have expressed intere
 
 ## API Overview
 
-Before developers can make use of the profiler, they'll first have to signal to the UA that they wish to profile by exposing the `Document-Policy: js-profiling` header.
-
-> This header ensures that any UA-specific profiling overhead is incurred only on loads that may profile.
-
-Developers will then be able to spin up a new `profiler` via `new Profiler(options)`, where `options` contains the following required fields:
+Developers can start a new profiler with `new Profiler(options)`, where `options` contains the following required fields:
 
 - `sampleInterval`: Target sample rate (in ms per sample)
   - The UA may choose a different sample rate than the one that the user requested (which must be the next lowest valid sampling interval).

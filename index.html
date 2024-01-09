@@ -245,7 +245,6 @@
         <a>new Profiler(options)</a> runs the following steps given an object <var>options</var> of type <a>ProfilerInitOptions</a>:
         <ol>
             <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
-            <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, throw a <code>"NotAllowedError"</code> DOMException.</li>
             <li>Create a new <a>profiling session</a> where:</li>
             <ol>
               <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
@@ -355,22 +354,6 @@
         <li><dfn>sampleInterval</dfn> is the application's desired <a>sample interval</a>. This value MUST be greater than or equal to zero.</li>
         <li><dfn>maxBufferSize</dfn> is the desired <a>sample buffer size limit</a>, in samples.</li>
       </ul>
-    </section>
-    <section id="document-policy">
-      <h2>Document Policy</h2>
-      <p>
-      This spec defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> with name <code>js-profiling</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>.
-      </p>
-      <p class="note">
-      Document policy is leveraged to give UAs the ability to avoid storing
-      required metadata for profiling when the document does not explicitly
-      request it.  While this metadata could conceivably be generated in
-      response to a profiler being started, we store this bit on the document
-      in order to signal to the engine as early as possible (as profiling early
-      in page load is a common use case). This overhead may be non-trivial
-      depending on the implementation, and therefore we default to
-      <code>false</code>.
-      </p>
     </section>
     <section>
       <h2>Automation</h2>
