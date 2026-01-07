@@ -245,7 +245,15 @@
         <a>new Profiler(options)</a> runs the following steps given an object <var>options</var> of type <a>ProfilerInitOptions</a>:
         <ol>
             <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
-            <li><a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. If the result is false, throw a <code>"NotAllowedError"</code> DOMException.</li>
+            <li>
+              <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. Let |jsProfilingEnabled : boolean| be the result.
+            </li>
+            <li>
+              <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-lazy"</code> in the <a data-cite="!HTML5#document">Document</a>. Let |jsProfilingLazyEnabled : boolean| be the result.
+            </li>
+            <li>
+              If both |jsProfilingEnabled| and |jsProfilingLazyEnabled| are false, throw a <code>"NotAllowedError"</code> DOMException.
+            </li>
             <li>Create a new <a>profiling session</a> where:</li>
             <ol>
               <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
@@ -359,18 +367,26 @@
     <section id="document-policy">
       <h2>Document Policy</h2>
       <p>
-      This spec defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> with name <code>js-profiling</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>.
+      This spec defines two <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration points</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> to control profiling capability and initialization behavior. Both have <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>. At least one policy MUST be enabled to allow the creation of <a>Profiler</a> instances.
       </p>
-      <p class="note">
-      Document policy is leveraged to give UAs the ability to avoid storing
-      required metadata for profiling when the document does not explicitly
-      request it.  While this metadata could conceivably be generated in
-      response to a profiler being started, we store this bit on the document
-      in order to signal to the engine as early as possible (as profiling early
-      in page load is a common use case). This overhead may be non-trivial
-      depending on the implementation, and therefore we default to
-      <code>false</code>.
-      </p>
+      <section>
+        <h2><code>js-profiling</code></h2>
+        <p>
+        When enabled, this policy authorizes scripts to use the JS Self-Profiling API and signals to the UA to perform early initialization of profiling infrastructure.
+        </p>
+        <p class="note">
+        This policy enables the UA to store required metadata and warm up profiling components as early as possible during document load. Early initialization is beneficial when profiling during page load is expected, but may introduce non-trivial performance overhead even when profiling is not actively used. This overhead may negatively impact metrics such as First Contentful Paint (FCP) and Largest Contentful Paint (LCP).
+        </p>
+      </section>
+      <section>
+        <h2><code>js-profiling-lazy</code></h2>
+        <p>
+        When enabled, this policy authorizes scripts to use the JS Self-Profiling API without requiring the UA to perform early initialization of profiling infrastructure.
+        </p>
+        <p class="note">
+        This policy allows the UA to defer profiling-related initialization overhead until the first <a>Profiler</a> is instantiated. This avoids performance costs during critical rendering periods when profiling is not actively used, making it suitable for documents that conditionally enable profiling based on sampling decisions or wish to profile interactions after page load.
+        </p>
+      </section>
     </section>
     <section>
       <h2>Automation</h2>
