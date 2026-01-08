@@ -369,6 +369,9 @@
       <p>
       This spec defines two <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration points</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> to control profiling capability and initialization behavior. Both have <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>. At least one policy MUST be enabled to allow the creation of <a>Profiler</a> instances.
       </p>
+      <p class="note">
+      If both <code>js-profiling</code> and <code>js-profiling-lazy</code> are enabled, the UA MUST honor the <code>js-profiling</code> policy and perform early initialization. The <code>js-profiling-lazy</code> policy MUST be ignored in this case.
+      </p>
       <section>
         <h2><code>js-profiling</code></h2>
         <p>
