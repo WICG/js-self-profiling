@@ -384,7 +384,7 @@
         When enabled, this policy authorizes scripts to use the JS Self-Profiling API without requiring the UA to perform early initialization of profiling infrastructure.
         </p>
         <p class="note">
-        This policy allows the UA to defer profiling-related initialization overhead until the first <a>Profiler</a> is instantiated. This avoids performance costs during critical rendering periods when profiling is not actively used, making it suitable for documents that conditionally enable profiling based on sampling decisions or wish to profile interactions after page load.
+        This policy allows the UA to defer profiling-related initialization overhead until the first <a>Profiler</a> is instantiated. This avoids performance costs during critical rendering periods when profiling is not actively used. However, if initialization occurs during user interaction processing, it may negatively impact Interaction to Next Paint (INP). Initializing the profiler when idle (after page load but before user interaction) can provide a balance between load-time and interaction performance. This policy is particularly suitable for documents that conditionally enable profiling based on sampling decisions.
         </p>
       </section>
     </section>
