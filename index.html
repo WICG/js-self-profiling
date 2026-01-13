@@ -380,24 +380,24 @@
         This spec defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> with name <code>js-profiling-mode</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>enum</code> with allowed values <code>"eager"</code> and <code>"lazy"</code>. The <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> is the empty string.
         </p>
         <p>
-        When set, this policy authorizes scripts to use the JS Self-Profiling API and controls the initialization behavior of the profiling infrastructure.
+        When set, this policy authorizes scripts to use the JS Self-Profiling API.
         </p>
         <section>
           <h2><code>eager</code></h2>
           <p>
-          When <code>js-profiling-mode</code> is set to <code>"eager"</code>, the UA MUST perform early initialization of profiling infrastructure.
+          When <code>js-profiling-mode</code> is set to <code>"eager"</code>, it signals to the UA that profiling during page load is expected.
           </p>
           <p class="note">
-          Early initialization enables the UA to store required metadata and warm up profiling components as early as possible during document load. This is beneficial when profiling during page load is expected, but may introduce non-trivial performance overhead even when profiling is not actively used. This overhead may negatively impact metrics such as First Contentful Paint (FCP) and Largest Contentful Paint (LCP).
+          UAs can use this hint to perform early initialization of profiling infrastructure, storing required metadata and warming up profiling components as early as possible during document load. However, this may introduce non-trivial performance overhead even when profiling is not actively used. This overhead may negatively impact metrics such as First Contentful Paint (FCP) and Largest Contentful Paint (LCP).
           </p>
         </section>
         <section>
           <h2><code>lazy</code></h2>
           <p>
-          When <code>js-profiling-mode</code> is set to <code>"lazy"</code>, the UA MAY defer initialization of profiling infrastructure until the first <a>Profiler</a> is instantiated.
+          When <code>js-profiling-mode</code> is set to <code>"lazy"</code>, it signals to the UA that profiling will be used conditionally.
           </p>
           <p class="note">
-          Deferred initialization allows the UA to avoid profiling-related overhead during critical rendering periods when profiling is not actively used. However, if initialization occurs during user interaction processing, it may negatively impact Interaction to Next Paint (INP). Initializing the profiler when idle (after page load but before user interaction) can provide a balance between load-time and interaction performance. This mode is particularly suitable for documents that conditionally enable profiling based on sampling decisions.
+          UAs can use this hint to defer profiling-related initialization overhead until the first <a>Profiler</a> is instantiated, avoiding performance costs during critical rendering periods when profiling is not actively used. However, if initialization occurs during user interaction processing, it may negatively impact Interaction to Next Paint (INP). This mode is particularly suitable for documents that conditionally enable profiling based on sampling decisions.
           </p>
         </section>
       </section>
