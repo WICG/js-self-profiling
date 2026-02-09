@@ -243,13 +243,13 @@
         <ol>
             <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
             <li>
-              <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-mode"</code> from <dfn data-cite="!HTML5#concept-incumbent-everything">the current global object</dfn>. Let |profilingMode| be the result.
+              <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-mode"</code> from <a data-cite="!HTML5#concept-current-everything">the current global object</a>. Let |profilingMode| be the result.
             </li>
             <li>
               If |profilingMode| is not <code>"eager"</code> or <code>"lazy"</code>:
               <ol>
                 <li>
-                  <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from <dfn data-cite="!HTML5#concept-incumbent-everything">the current global object</dfn>. Let |jsProfilingEnabled : boolean| be the result.
+                  <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from <a data-cite="!HTML5#concept-current-everything">the current global object</a>. Let |jsProfilingEnabled : boolean| be the result.
                 </li>
                 <li>
                   If |jsProfilingEnabled| is false, throw a <code>"NotAllowedError"</code> DOMException.
