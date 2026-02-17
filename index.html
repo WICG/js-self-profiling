@@ -255,7 +255,7 @@
                   If |profilingMode| is not <code>"eager"</code> or <code>"lazy"</code>:
                   <ol>
                     <li>
-                      <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from |globalObject|. Let |jsProfilingEnabled : boolean| be the result.
+                      <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from |globalObject|. Let |jsProfilingEnabled| be the result.
                     </li>
                     <li>
                       If |jsProfilingEnabled| is false, throw a <code>"NotAllowedError"</code> DOMException.
@@ -391,7 +391,7 @@
       in page load is a common use case). This overhead may be non-trivial
       depending on the implementation, and therefore we default to
       <code>false</code>.
-    </p>
+      </p>
     </section>
     <section>
       <h2>Automation</h2>
