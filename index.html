@@ -225,7 +225,7 @@
     <section data-dfn-for="Profiler" data-link-for="Profiler">
       <h2>The <dfn>Profiler</dfn> Interface</h2>
       <pre class="idl">
-    [Exposed=(Window, Worker)]
+      [Exposed=(Window, Worker)]
       interface Profiler : EventTarget {
         readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute boolean stopped;
@@ -263,6 +263,9 @@
                   </ol>
                 </li>
               </ol>
+            </li>
+            <li>
+              Otherwise, throw a <code>"NotAllowedError"</code> DOMException.
             </li>
             <li>Create a new <a>profiling session</a> where:</li>
             <ol>
@@ -377,47 +380,18 @@
     <section id="document-policy">
       <h2>Document Policy</h2>
       <p>
-      This spec defines <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration points</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> to control profiling capability and initialization behavior.
+      This spec defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> in <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html">Document Policy</a> with name <code>js-profiling</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>.
       </p>
-      <section>
-        <h2><code>js-profiling-mode</code></h2>
-        <p>
-        This spec defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> with name <code>js-profiling-mode</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>enum</code> with allowed values <code>"eager"</code> and <code>"lazy"</code>. The <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> is the empty string.
-        </p>
-        <p>
-        When set, this policy authorizes scripts to use the JS Self-Profiling API.
-        </p>
-        <section>
-          <h2><code>eager</code></h2>
-          <p>
-          When <code>js-profiling-mode</code> is set to <code>"eager"</code>, it signals to the UA that profiling during page load is expected.
-          </p>
-          <p class="note">
-          UAs can use this hint to perform early initialization of profiling infrastructure, storing required metadata and warming up profiling components as early as possible during document load. However, this may introduce non-trivial performance overhead even when profiling is not actively used. This overhead may negatively impact metrics such as First Contentful Paint (FCP) and Largest Contentful Paint (LCP).
-          </p>
-        </section>
-        <section>
-          <h2><code>lazy</code></h2>
-          <p>
-          When <code>js-profiling-mode</code> is set to <code>"lazy"</code>, it signals to the UA that profiling will be used conditionally.
-          </p>
-          <p class="note">
-          UAs can use this hint to defer profiling-related initialization overhead until the first <a>Profiler</a> is instantiated, avoiding performance costs during critical rendering periods when profiling is not actively used. However, if initialization occurs during user interaction processing, it may negatively impact Interaction to Next Paint (INP). This mode is particularly suitable for documents that conditionally enable profiling based on sampling decisions.
-          </p>
-        </section>
-      </section>
-      <section>
-        <h2><code>js-profiling</code> (deprecated)</h2>
-        <p>
-        This spec also defines a <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point">configuration point</a> with name <code>js-profiling</code>. Its <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-type">type</a> is <code>boolean</code> with <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#configuration-point-default-value">default value</a> <code>false</code>.
-        </p>
-        <p>
-        When enabled, this policy authorizes scripts to use the JS Self-Profiling API and signals to the UA to perform early initialization of profiling infrastructure (semantically equivalent to <code>js-profiling-mode=eager</code>).
-        </p>
-        <p class="note">
-        The <code>js-profiling</code> boolean configuration point is deprecated in favor of <code>js-profiling-mode</code>. If both are specified, <code>js-profiling-mode</code> takes precedence and <code>js-profiling</code> MUST be ignored. Implementations SHOULD support <code>js-profiling</code> for backwards compatibility but MAY remove support in the future.
-        </p>
-      </section>
+      <p class="note">
+      Document policy is leveraged to give UAs the ability to avoid storing
+      required metadata for profiling when the document does not explicitly
+      request it.  While this metadata could conceivably be generated in
+      response to a profiler being started, we store this bit on the document
+      in order to signal to the engine as early as possible (as profiling early
+      in page load is a common use case). This overhead may be non-trivial
+      depending on the implementation, and therefore we default to
+      <code>false</code>.
+    </p>
     </section>
     <section>
       <h2>Automation</h2>
