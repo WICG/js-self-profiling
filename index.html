@@ -225,7 +225,7 @@
     <section data-dfn-for="Profiler" data-link-for="Profiler">
       <h2>The <dfn>Profiler</dfn> Interface</h2>
       <pre class="idl">
-      <div Exposed="Window,Worker"></div>
+    [Exposed=(Window, Worker)]
       interface Profiler : EventTarget {
         readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute boolean stopped;
@@ -243,23 +243,31 @@
         <ol>
             <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
             <li>
-              <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-mode"</code> from <a data-cite="!HTML5#concept-current-everything">the current global object</a>. Let |profilingMode| be the result.
+              Let |globalObject| be the <dfn data-cite="!HTML5#current">current</dfn>'s [=global object=].
             </li>
             <li>
-              If |profilingMode| is not <code>"eager"</code> or <code>"lazy"</code>:
+              If |globalObject| is a <dfn data-cite="!HTML5#window">Window</dfn> or a <dfn data-cite="!HTML5#the-workerglobalscope-common-interface">WorkerGlobalScope</dfn>:
               <ol>
                 <li>
-                  <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from <a data-cite="!HTML5#concept-current-everything">the current global object</a>. Let |jsProfilingEnabled : boolean| be the result.
+                  <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-mode"</code> from |globalObject|. Let |profilingMode| be the result.
                 </li>
                 <li>
-                  If |jsProfilingEnabled| is false, throw a <code>"NotAllowedError"</code> DOMException.
+                  If |profilingMode| is not <code>"eager"</code> or <code>"lazy"</code>:
+                  <ol>
+                    <li>
+                      <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from |globalObject|. Let |jsProfilingEnabled : boolean| be the result.
+                    </li>
+                    <li>
+                      If |jsProfilingEnabled| is false, throw a <code>"NotAllowedError"</code> DOMException.
+                    </li>
+                  </ol>
                 </li>
               </ol>
             </li>
             <li>Create a new <a>profiling session</a> where:</li>
             <ol>
               <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
-              <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
+              <li>The associated <a>time origin</a> is equal to the time origin of |globalObject|.</li>
               <li>The associated <a>sample buffer size limit</a> is set to {{ProfilerInitOptions/maxBufferSize}}.</li>
               <li>The associated [= agent =] is set to the <dfn data-cite="!ECMA-262#surrounding-agent">surrounding agent</dfn>.</li>
               <li>The associated [= realm =] is set to the <dfn data-cite="!ECMA-262#current-realm">current realm record</dfn>.</li>
