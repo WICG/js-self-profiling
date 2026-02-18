@@ -225,7 +225,7 @@
     <section data-dfn-for="Profiler" data-link-for="Profiler">
       <h2>The <dfn>Profiler</dfn> Interface</h2>
       <pre class="idl">
-      [Exposed=Window]
+      [Exposed=(Window, Worker)]
       interface Profiler : EventTarget {
         readonly attribute DOMHighResTimeStamp sampleInterval;
         readonly attribute boolean stopped;
@@ -237,32 +237,40 @@
       <p>Each <a>Profiler</a> MUST be associated with exactly one <a>profiling session</a>.</p>
       <p>The <dfn>sampleInterval</dfn> attribute MUST reflect the <a>sample interval</a> of the associated <a>profiling session</a> expressed as a <dfn data-cite="!hr-time-2#sec-domhighrestimestamp">DOMHighResTimeStamp</dfn>.</p>
       <p>The <dfn>stopped</dfn> attribute MUST be true if and only if the <a>profiling session</a> has state <code>stopped</code>.</p>
-      <p class="issue" data-number="33">
-      {{Profiler}} is only exposed on {{Window}} until consensus is reached on [[Permissions-Policy]] and {{Worker}} integration.
-      </p>
       <section>
         <h2><dfn data-lt="constructor()">new Profiler(options)</dfn></h2>
         <a>new Profiler(options)</a> runs the following steps given an object <var>options</var> of type <a>ProfilerInitOptions</a>:
         <ol>
             <li>If <var>options</var>' {{ProfilerInitOptions/sampleInterval}} is less than 0, throw a <code>RangeError</code>.</li>
             <li>
-              <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-mode"</code> in the <a data-cite="!HTML5#document">Document</a>. Let |profilingMode| be the result.
+              Let |globalObject| be the <dfn data-cite="!HTML5#current-global-object">current global object</dfn>.
             </li>
             <li>
-              If |profilingMode| is not <code>"eager"</code> or <code>"lazy"</code>:
+              If |globalObject| is a <dfn data-cite="!HTML5#window">Window</dfn> or a <dfn data-cite="!HTML5#the-workerglobalscope-common-interface">WorkerGlobalScope</dfn>:
               <ol>
                 <li>
-                  <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> in the <a data-cite="!HTML5#document">Document</a>. Let |jsProfilingEnabled : boolean| be the result.
+                  <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling-mode"</code> from |globalObject|. Let |profilingMode| be the result.
                 </li>
                 <li>
-                  If |jsProfilingEnabled| is false, throw a <code>"NotAllowedError"</code> DOMException.
+                  If |profilingMode| is not <code>"eager"</code> or <code>"lazy"</code>:
+                  <ol>
+                    <li>
+                      <a href="https://w3c.github.io/webappsec-permissions-policy/document-policy.html#algo-get-policy-value">Get the policy value</a> for <code>"js-profiling"</code> from |globalObject|. Let |jsProfilingEnabled| be the result.
+                    </li>
+                    <li>
+                      If |jsProfilingEnabled| is false, throw a <code>"NotAllowedError"</code> DOMException.
+                    </li>
+                  </ol>
                 </li>
               </ol>
+            </li>
+            <li>
+              Otherwise, throw a <code>"NotAllowedError"</code> DOMException.
             </li>
             <li>Create a new <a>profiling session</a> where:</li>
             <ol>
               <li>The associated <a>sample interval</a> is set to either <a>ProfilerInitOptions.sampleInterval</a> OR the next lowest interval supported by the UA.</li>
-              <li>The associated <a>time origin</a> is equal to the time origin of the <dfn data-cite="!HTML5#current">current</dfn> global object.</li>
+              <li>The associated <a>time origin</a> is equal to the time origin of |globalObject|.</li>
               <li>The associated <a>sample buffer size limit</a> is set to {{ProfilerInitOptions/maxBufferSize}}.</li>
               <li>The associated [= agent =] is set to the <dfn data-cite="!ECMA-262#surrounding-agent">surrounding agent</dfn>.</li>
               <li>The associated [= realm =] is set to the <dfn data-cite="!ECMA-262#current-realm">current realm record</dfn>.</li>
