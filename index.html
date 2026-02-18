@@ -324,17 +324,23 @@
       Inspired by the <a href="https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#">V8 trace event format</a>
       and <a href="https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md">Gecko profile format</a>,
       this representation is designed to be easily and efficiently serializable.
-      </p>
-      <section data-dfn-for="ProfilerSample" data-link-for="ProfilerSample">
+      </p>      <section data-dfn-for="ProfilerSample" data-link-for="ProfilerSample">
         <h2>The <dfn>ProfilerSample</dfn> Dictionary</h2>
         <pre class="idl">
+        enum ProfilerMarker { "script", "gc", "style", "layout", "paint", "other" };
+
         dictionary ProfilerSample {
           required DOMHighResTimeStamp timestamp;
           unsigned long long stackId;
+          ProfilerMarker? marker;
         };
         </pre>
         <p><dfn>timestamp</dfn> MUST return the value it was initialized to.</p>
         <p><dfn>stackId</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>marker</dfn> MUST return the value it was initialized to, if present. The availability of markers depends on the context's cross-origin isolation status.</p>
+        <p class="note">
+        In cross-origin isolated contexts, all marker types are available. In non-isolated contexts, only <code>style</code> and <code>layout</code> markers are exposed for security reasons.
+        </p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
         <h2>The <dfn>ProfilerStack</dfn> Dictionary</h2>
