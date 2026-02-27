@@ -325,16 +325,29 @@
       and <a href="https://github.com/devtools-html/perf.html/blob/master/docs-developer/gecko-profile-format.md">Gecko profile format</a>,
       this representation is designed to be easily and efficiently serializable.
       </p>
+      <section data-dfn-for="ProfilerMarker" data-link-for="ProfilerMarker">
+        <h2>The <dfn>ProfilerMarker</dfn> Enum</h2>
+        <pre class="idl">
+          enum ProfilerMarker { 
+            "gc",
+            "layout",
+            "paint",
+            "style"
+          };
+        </pre>
+      </section>
       <section data-dfn-for="ProfilerSample" data-link-for="ProfilerSample">
         <h2>The <dfn>ProfilerSample</dfn> Dictionary</h2>
         <pre class="idl">
         dictionary ProfilerSample {
           required DOMHighResTimeStamp timestamp;
           unsigned long long stackId;
+          ProfilerMarker? marker;
         };
         </pre>
         <p><dfn>timestamp</dfn> MUST return the value it was initialized to.</p>
         <p><dfn>stackId</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>marker</dfn> MUST return the value it was initialized to.</p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
         <h2>The <dfn>ProfilerStack</dfn> Dictionary</h2>
