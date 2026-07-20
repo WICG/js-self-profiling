@@ -90,7 +90,7 @@ Markers are conditionally exposed based on the security context to balance devel
 
 This graduated approach allows developers to access layout and style timing information (already available through DOM APIs and CSSOM) in regular contexts, while requiring explicit Cross-Origin Isolation for more sensitive timing data.
 
-For detailed technical specification, see the [Conditional Markers Exposure explainer](https://github.com/MSEdgeExplainers/ConditionalMarkersExposure).
+For detailed technical specification, see the [Conditional Markers Exposure explainer](https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/ConditionalMarkersExposure/explainer.md).
 
 ## Key scenarios
 
@@ -255,7 +255,8 @@ Trace with markers:
       "marker": "script"
     },
     {
-      "timestamp" :150    }
+      "timestamp": 150
+    }
 ```
 
 ### Conditional marker availability example
