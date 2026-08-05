@@ -164,7 +164,7 @@
       To <dfn>capture a marker</dfn> given an <a data-cite="HTML5#environment-settings-object">environment settings object</a> <var>settings</var>, perform the following steps:
       </p>
       <ol>
-        <li>Let <var>candidateMarker</var> be the <a>ProfilerMarker</a> value that best describes the top-level work the user agent was performing when the sample was taken, or null if none applies.</li>
+        <li>Let <var>candidateMarker</var> be the <a>ProfilerMarker</a> value that best describes the top-level work the user agent was performing on the profiling session's <a>agent</a> when the sample was taken, or null if none applies.</li>
         <li>If <var>candidateMarker</var> is null, return null.</li>
         <li>Return the result of running <a>filter a marker</a> given <var>candidateMarker</var> and <var>settings</var>.</li>
       </ol>
@@ -454,7 +454,7 @@
         As a result, the API does not expose any new insight into the contents or execution characteristics of cross-origin script, beyond what is already possible through manual instrumentation. UAs are encouraged to verify this holds if they choose to support extremely low <a>sample interval</a> values (e.g. less than one millisecond).
         </p>
       </section>
-      <section id="cross-origin-execution">
+      <section>
         <h2>Cross-origin execution</h2>
         <p>
         Cross-origin execution contexts should not be observable by the API through the realm check in the <a>take a sample</a> algorithm. Cross-origin <code>iframes</code> and other execution contexts that share an <a>agent</a> with a profiler will therefore not have their execution observable through this API.
@@ -471,10 +471,10 @@
       <section id="conditional-markers">
         <h2>Conditional marker exposure</h2>
         <p>
-        The <a>filter a marker</a> algorithm exposes the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers only when the profiler's <a data-cite="HTML5#environment-settings-object">environment settings object</a> has its <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolated capability</a> set to true. These markers can reflect engine work that is not necessarily attributable to a single origin &mdash; for example, garbage collection and script compilation are typically process-wide, and painting may composite content from cross-origin frames. Exposing their timing without isolation could therefore contribute to a cross-origin side channel of the kind that cross-origin isolation is designed to mitigate. Gating them behind <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolation</a> ensures the surrounding context is already separated from cross-origin data before this timing becomes observable.
+        By default, the <a>filter a marker</a> algorithm exposes the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers only when the profiler's <a data-cite="HTML5#environment-settings-object">environment settings object</a> has its <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolated capability</a> set to true. These markers can reflect engine work that cannot reliably be attributed to a single origin &mdash; for example, garbage collection and other cross-context engine activity can correlate work across contexts, and painting may composite content from other frames. Exposing the timing of such work without isolation could therefore contribute to a cross-origin side channel of the kind that <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolation</a> is designed to mitigate, so it is gated behind it. A user agent MAY widen the exposed set through an explicit opt-in (as described in the <a>filter a marker</a> note above), but such opt-ins MUST NOT expose markers cross-origin.
         </p>
         <p>
-        The <code>style</code> and <code>layout</code> markers are exposed without cross-origin isolation because the timing they reveal is already same-origin observable. A document can already synchronously trigger, and time, its own style and layout work using existing APIs that force a reflow, such as <code>getBoundingClientRect()</code> or <code>getComputedStyle()</code>. These markers therefore expose no timing information that a same-origin document could not already obtain, and &mdash; like every sample &mdash; they remain subject to the restrictions in <a href="#cross-origin-execution">Cross-origin execution</a>, so they never attribute work to a cross-origin execution context.
+        The <code>style</code> and <code>layout</code> markers are exposed without cross-origin isolation because the timing they reveal is already same-origin observable. A document can already synchronously flush, and time, its own style and layout using existing APIs &mdash; for example, <code>getBoundingClientRect()</code> forces layout, and <code>getComputedStyle()</code> flushes style (and layout where required). To preserve this property, a user agent attributes the <code>style</code> and <code>layout</code> markers only to work performed for a document that is same origin with the profiler; work that cannot be attributed to a same-origin document is not reported through these markers. As a result, they expose no timing information that a same-origin document could not already obtain for itself.
         </p>
       </section>
     </section>
