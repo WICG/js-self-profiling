@@ -156,14 +156,21 @@
         <li>Set the <a>ProfilerSample.timestamp</a> property of <var>sample</var> to the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a>.</li>
         <li>Let <var>stack</var> be the <dfn data-cite="!ECMA-262#execution-context-stack">execution context stack</dfn> associated with the profiling session's <a>agent</a>.</li>
         <li>Set the <a>ProfilerSample.stackId</a> property of <var>sample</var> to the result of the <a>get a stack ID</a> algorithm on <var>stack</var>.</li>
-        <li>
-          Let <var>candidateMarker</var> be the <a>ProfilerMarker</a> value that best describes the top-level work the user agent was performing when the sample was taken, or null if none applies.
-        </li>
-        <li>
-          If <var>candidateMarker</var> is not null, set the <a>ProfilerSample.marker</a> property of <var>sample</var> to the result of running <a>filter a marker</a> given <var>candidateMarker</var> and the profiling session's associated <a data-cite="HTML5#environment-settings-object">environment settings object</a>.
-        </li>
+        <li>Let <var>marker</var> be the result of running the <a>capture a marker</a> algorithm given the profiling session's associated <a data-cite="HTML5#environment-settings-object">environment settings object</a>.</li>
+        <li>If <var>marker</var> is not null, set the <a>ProfilerSample.marker</a> property of <var>sample</var> to <var>marker</var>.</li>
         <li>Add <var>sample</var> to the <a>ProfilerTrace.samples</a> associated with the session's <a>ProfilerTrace</a>.</li>
       </ol>
+      <p>
+      To <dfn>capture a marker</dfn> given an <a data-cite="HTML5#environment-settings-object">environment settings object</a> <var>settings</var>, perform the following steps:
+      </p>
+      <ol>
+        <li>Let <var>candidateMarker</var> be the <a>ProfilerMarker</a> value that best describes the top-level work the user agent was performing when the sample was taken, or null if none applies.</li>
+        <li>If <var>candidateMarker</var> is null, return null.</li>
+        <li>Return the result of running <a>filter a marker</a> given <var>candidateMarker</var> and <var>settings</var>.</li>
+      </ol>
+      <p class="note">
+      The mapping from a user agent's internal activity to a <a>ProfilerMarker</a> value is intentionally implementation-defined, as engine architectures differ. As non-normative guidance, a user agent is expected to report <code>script</code> while executing author script, <code>gc</code> during garbage collection, <code>style</code> while recalculating computed style, <code>layout</code> while computing box geometry (i.e. reflow), and <code>paint</code> while rasterizing or compositing document content. The <code>other</code> marker is used for user-agent work that does not fall into one of the preceding categories. When no category applies (for example, when the agent is idle), the <a>capture a marker</a> algorithm returns null and the <a>marker</a> attribute is left absent on the resulting <a>ProfilerSample</a>.
+      </p>
       <p>
       To <dfn>filter a marker</dfn> given a <a>ProfilerMarker</a> <var>marker</var> and an <a data-cite="HTML5#environment-settings-object">environment settings object</a> <var>settings</var>, perform the following steps:
       </p>
@@ -173,7 +180,7 @@
         <li>Return null.</li>
       </ol>
       <p class="note">
-      The <a>filter a marker</a> algorithm produces the observable behavior that in non-cross-origin-isolated contexts, only the <code>style</code> and <code>layout</code> markers appear on <a>ProfilerSample</a>; the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers are suppressed. User agents MAY offer opt-in mechanisms (for example, an origin-trial token or a document policy) that widen the set returned by <a>filter a marker</a> for a specific <a data-cite="HTML5#environment-settings-object">environment settings object</a>; such opt-ins MUST NOT expose markers cross-origin.
+      The <a>filter a marker</a> algorithm produces the observable behavior that in non-cross-origin-isolated contexts, only the <code>style</code> and <code>layout</code> markers appear on <a>ProfilerSample</a>; the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers are suppressed. See <a href="#conditional-markers">Conditional marker exposure</a> for the rationale behind this behavior. User agents MAY offer opt-in mechanisms (for example, an origin-trial token or a document policy) that widen the set returned by <a>filter a marker</a> for a specific <a data-cite="HTML5#environment-settings-object">environment settings object</a>; such opt-ins MUST NOT expose markers cross-origin.
       </p>
       <p>
       To <dfn>get a stack ID</dfn> given an <a>execution context stack</a> bound to <var>stack</var>, perform the following steps:
@@ -447,7 +454,7 @@
         As a result, the API does not expose any new insight into the contents or execution characteristics of cross-origin script, beyond what is already possible through manual instrumentation. UAs are encouraged to verify this holds if they choose to support extremely low <a>sample interval</a> values (e.g. less than one millisecond).
         </p>
       </section>
-      <section>
+      <section id="cross-origin-execution">
         <h2>Cross-origin execution</h2>
         <p>
         Cross-origin execution contexts should not be observable by the API through the realm check in the <a>take a sample</a> algorithm. Cross-origin <code>iframes</code> and other execution contexts that share an <a>agent</a> with a profiler will therefore not have their execution observable through this API.
@@ -459,6 +466,15 @@
         Timing attacks remain a concern for any API that could introduce a new source of high-resolution timing information. Timestamps gathered in traces should be obtained from the same source as [[?HR-Time]]'s <a>current high resolution time</a> to avoid exposing a new vector for side-channel attacks.
         <p class="note">
         See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>.
+        </p>
+      </section>
+      <section id="conditional-markers">
+        <h2>Conditional marker exposure</h2>
+        <p>
+        The <a>filter a marker</a> algorithm exposes the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers only when the profiler's <a data-cite="HTML5#environment-settings-object">environment settings object</a> has its <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolated capability</a> set to true. These markers can reflect engine work that is not necessarily attributable to a single origin &mdash; for example, garbage collection and script compilation are typically process-wide, and painting may composite content from cross-origin frames. Exposing their timing without isolation could therefore contribute to a cross-origin side channel of the kind that cross-origin isolation is designed to mitigate. Gating them behind <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolation</a> ensures the surrounding context is already separated from cross-origin data before this timing becomes observable.
+        </p>
+        <p>
+        The <code>style</code> and <code>layout</code> markers are exposed without cross-origin isolation because the timing they reveal is already same-origin observable. A document can already synchronously trigger, and time, its own style and layout work using existing APIs that force a reflow, such as <code>getBoundingClientRect()</code> or <code>getComputedStyle()</code>. These markers therefore expose no timing information that a same-origin document could not already obtain, and &mdash; like every sample &mdash; they remain subject to the restrictions in <a href="#cross-origin-execution">Cross-origin execution</a>, so they never attribute work to a cross-origin execution context.
         </p>
       </section>
     </section>
