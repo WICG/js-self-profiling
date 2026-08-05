@@ -156,8 +156,36 @@
         <li>Set the <a>ProfilerSample.timestamp</a> property of <var>sample</var> to the <dfn data-cite="!hr-time-2#dfn-current-high-resolution-time">current high resolution time</dfn> relative to the <a>profiling session</a>'s <a>time origin</a>.</li>
         <li>Let <var>stack</var> be the <dfn data-cite="!ECMA-262#execution-context-stack">execution context stack</dfn> associated with the profiling session's <a>agent</a>.</li>
         <li>Set the <a>ProfilerSample.stackId</a> property of <var>sample</var> to the result of the <a>get a stack ID</a> algorithm on <var>stack</var>.</li>
+        <li>Let <var>marker</var> be the result of running the <a>capture a marker</a> algorithm given the profiling session's associated <a data-cite="HTML5#environment-settings-object">environment settings object</a>.</li>
+        <li>If <var>marker</var> is not null, set the <a>ProfilerSample.marker</a> property of <var>sample</var> to <var>marker</var>.</li>
         <li>Add <var>sample</var> to the <a>ProfilerTrace.samples</a> associated with the session's <a>ProfilerTrace</a>.</li>
       </ol>
+      <p>
+      To <dfn>capture a marker</dfn> given an <a data-cite="HTML5#environment-settings-object">environment settings object</a> <var>settings</var>, perform the following steps:
+      </p>
+      <ol>
+        <li>Let <var>candidateMarker</var> be the <a>ProfilerMarker</a> value that best describes the top-level work the user agent was performing on the profiling session's <a>agent</a> when the sample was taken, or null if none applies.</li>
+        <li>If <var>candidateMarker</var> is null, return null.</li>
+        <li>If the work described by <var>candidateMarker</var> was performed for a specific document that is not [= same origin =] with the <a data-cite="HTML5#concept-settings-object-origin">origin</a> of <var>settings</var>, return null.</li>
+        <li>Return the result of running <a>filter a marker</a> given <var>candidateMarker</var> and <var>settings</var>.</li>
+      </ol>
+      <p class="note">
+      The mapping from a user agent's internal activity to a <a>ProfilerMarker</a> value is intentionally implementation-defined, as engine architectures differ. As non-normative guidance, a user agent is expected to report <code>script</code> while executing author script, <code>gc</code> during garbage collection, <code>style</code> while recalculating computed style, <code>layout</code> while computing box geometry (i.e. reflow), and <code>paint</code> while rasterizing or compositing document content. The <code>other</code> marker is used for user-agent work that does not fall into one of the preceding categories. When no category applies (for example, when the agent is idle), the <a>capture a marker</a> algorithm returns null and the <a>ProfilerSample.marker</a> attribute is left absent on the resulting <a>ProfilerSample</a>.
+      </p>
+      <p class="note">
+      The same-origin check ensures a marker only describes work performed for a document that is [= same origin =] with the profiler, consistent with the requirement that the API not reveal cross-origin activity. Work that is not attributable to a single document &mdash; for example, engine-wide garbage collection &mdash; is not constrained by that check; such work is instead exposed only when the profiler is cross-origin isolated, as enforced by <a>filter a marker</a>.
+      </p>
+      <p>
+      To <dfn>filter a marker</dfn> given a <a>ProfilerMarker</a> <var>marker</var> and an <a data-cite="HTML5#environment-settings-object">environment settings object</a> <var>settings</var>, perform the following steps:
+      </p>
+      <ol>
+        <li>If <var>settings</var>' <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolated capability</a> is true, return <var>marker</var>.</li>
+        <li>If <var>marker</var> is <code>"style"</code> or <code>"layout"</code>, return <var>marker</var>.</li>
+        <li>Return null.</li>
+      </ol>
+      <p class="note">
+      The <a>filter a marker</a> algorithm produces the observable behavior that in non-cross-origin-isolated contexts, only the <code>style</code> and <code>layout</code> markers appear on <a>ProfilerSample</a>; the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers are suppressed. See <a href="#conditional-markers">Conditional marker exposure</a> for the rationale behind this behavior. User agents MAY offer opt-in mechanisms (for example, an origin-trial token or a document policy) that widen the set returned by <a>filter a marker</a> for a specific <a data-cite="HTML5#environment-settings-object">environment settings object</a>; such opt-ins MUST NOT expose markers cross-origin.
+      </p>
       <p>
       To <dfn>get a stack ID</dfn> given an <a>execution context stack</a> bound to <var>stack</var>, perform the following steps:
       <ol>
@@ -328,13 +356,20 @@
       <section data-dfn-for="ProfilerSample" data-link-for="ProfilerSample">
         <h2>The <dfn>ProfilerSample</dfn> Dictionary</h2>
         <pre class="idl">
+        enum ProfilerMarker { "script", "gc", "style", "layout", "paint", "other" };
+
         dictionary ProfilerSample {
           required DOMHighResTimeStamp timestamp;
           unsigned long long stackId;
+          ProfilerMarker? marker;
         };
         </pre>
         <p><dfn>timestamp</dfn> MUST return the value it was initialized to.</p>
         <p><dfn>stackId</dfn> MUST return the value it was initialized to.</p>
+        <p><dfn>marker</dfn> MUST return the value it was initialized to by the <a>take a sample</a> algorithm, or be absent if no marker was set. The set of marker values that may be exposed is governed by the <a>filter a marker</a> algorithm.</p>
+        <p class="note">
+        In cross-origin isolated contexts the <a>filter a marker</a> algorithm returns every value in the <a>ProfilerMarker</a> enumeration. In non-isolated contexts it returns only <code>style</code> and <code>layout</code>, so any other marker is suppressed (the <a>marker</a> attribute is absent on the corresponding <a>ProfilerSample</a>).
+        </p>
       </section>
       <section data-dfn-for="ProfilerStack" data-link-for="ProfilerStack">
         <h2>The <dfn>ProfilerStack</dfn> Dictionary</h2>
@@ -485,6 +520,15 @@
         Timing attacks remain a concern for any API that could introduce a new source of high-resolution timing information. Timestamps gathered in traces should be obtained from the same source as [[?HR-Time]]'s <a>current high resolution time</a> to avoid exposing a new vector for side-channel attacks.
         <p class="note">
         See [[?HR-Time]]'s discussion on <a href="https://www.w3.org/TR/hr-time-2/#clock-resolution">clock resolution</a>.
+        </p>
+      </section>
+      <section id="conditional-markers">
+        <h2>Conditional marker exposure</h2>
+        <p>
+        By default, the <a>filter a marker</a> algorithm exposes the <code>script</code>, <code>gc</code>, <code>paint</code>, and <code>other</code> markers only when the profiler's <a data-cite="HTML5#environment-settings-object">environment settings object</a> has its <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolated capability</a> set to true. These markers can reflect engine work that cannot reliably be attributed to a single origin &mdash; for example, garbage collection and other cross-context engine activity can correlate work across contexts, and painting may composite content from other frames. Exposing the timing of such work without isolation could therefore contribute to a cross-origin side channel of the kind that <a data-cite="HTML5#concept-settings-object-cross-origin-isolated-capability">cross-origin isolation</a> is designed to mitigate, so it is gated behind it. A user agent MAY widen the exposed set through an explicit opt-in (as described in the <a>filter a marker</a> note above), but such opt-ins MUST NOT expose markers cross-origin.
+        </p>
+        <p>
+        The <code>style</code> and <code>layout</code> markers are exposed without cross-origin isolation because the timing they reveal is already same-origin observable. A document can already synchronously flush, and time, its own style and layout using existing APIs &mdash; for example, <code>getBoundingClientRect()</code> forces layout, and <code>getComputedStyle()</code> flushes style (and layout where required). To preserve this property, the <a>capture a marker</a> algorithm reports a marker only for work performed for a document that is same origin with the profiler; work that cannot be attributed to a same-origin document is not reported through these markers. As a result, they expose no timing information that a same-origin document could not already obtain for itself.
         </p>
       </section>
     </section>
