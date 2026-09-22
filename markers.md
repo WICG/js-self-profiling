@@ -66,6 +66,10 @@ But we can envision 3 markers corresponding to the stages described in draft doc
 * `layout`
 * `paint`
 
+Additionaly UAs may support additional markers they consider relevant for performance analysis on their platform. Examples of those markers are:
+
+* `script-parser`:  script related activity, converting a script into an intermediate representation like an Abstract Syntax Tree
+* `script-compile`: script related activity, converting a script into a bytecode representation for execution.
 
 ```
 enum ProfilerMarker { "script", "gc", "style", "layout", "paint", "other" };
