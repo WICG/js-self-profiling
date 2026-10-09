@@ -84,7 +84,9 @@ window.addEventListener('load', collectAndSendTrace);
 
 ## Markers Extensions
 
-See [markers](markers.md) for detailed description of the proposal.
+The API supports optional markers that identify browser activity during sampling. Markers are conditionally exposed based on security context - all markers are available in cross-origin isolated contexts, while only safe markers (`style`, `layout`) are available in regular contexts.
+
+See [markers](markers.md) for detailed description of the proposal and [Conditional Markers Exposure](https://github.com/MicrosoftEdge/MSEdgeExplainers/blob/main/ConditionalMarkersExposure/explainer.md) for technical implementation details.
 
 ## Privacy and Security
 

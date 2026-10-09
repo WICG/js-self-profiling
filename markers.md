@@ -73,9 +73,24 @@ enum ProfilerMarker { "script", "gc", "style", "layout", "paint", "other" };
 dictionary ProfilerSample {
   required DOMHighResTimeStamp timestamp;
   unsigned long long stackId;
-  [CrossOriginIsolated] ProfilerMarker? marker;
+  ProfilerMarker? marker;
 };
 ```
+
+## Conditional Marker Exposure
+
+Markers are conditionally exposed based on the security context to balance developer utility with privacy protection:
+
+**Cross-Origin Isolated contexts** (with `Cross-Origin-Embedder-Policy: require-corp` and `Cross-Origin-Opener-Policy: same-origin` headers):
+- All marker types are available: `script`, `gc`, `style`, `layout`, `paint`, `other`
+
+**Non-isolated contexts** (regular browsing contexts):
+- Only safe markers are available: `style`, `layout`
+- Sensitive markers (`gc`, `paint`, `script`) are filtered out for security reasons
+
+This graduated approach allows developers to access layout and style timing information (already available through DOM APIs and CSSOM) in regular contexts, while requiring explicit Cross-Origin Isolation for more sensitive timing data.
+
+For detailed technical specification, see the [Conditional Markers Exposure explainer](https://github.com/MSEdgeExplainers/ConditionalMarkersExposure).
 
 ## Key scenarios
 
@@ -240,14 +255,84 @@ Trace with markers:
       "marker": "script"
     },
     {
-      "timestamp" :150
-    }
+      "timestamp" :150    }
 ```
+
+### Conditional marker availability example
+
+**In a Cross-Origin Isolated context** (all markers available):
+
+```json
+{
+  "samples": [
+    {
+      "timestamp": 100,
+      "stackId": 2,
+      "marker": "script"
+    },
+    {
+      "timestamp": 110,
+      "marker": "gc"
+    },
+    {
+      "timestamp": 120,
+      "marker": "style"
+    },
+    {
+      "timestamp": 130,
+      "marker": "layout"
+    },
+    {
+      "timestamp": 140,
+      "marker": "paint"
+    }
+  ]
+}
+```
+
+**In a regular (non-isolated) context** (only safe markers available):
+
+```json
+{
+  "samples": [
+    {
+      "timestamp": 100,
+      "stackId": 2
+    },
+    {
+      "timestamp": 110
+    },
+    {
+      "timestamp": 120,
+      "marker": "style"
+    },
+    {
+      "timestamp": 130,
+      "marker": "layout"
+    },
+    {
+      "timestamp": 140
+    }
+  ]
+}
+```
+
+Note how `gc`, `script`, and `paint` markers are filtered out in non-isolated contexts for security reasons.
+
 ## Privacy and Security
 
 Careful consideration must be taken to avoid leaking top level UA work performed on a cross-origin document. UAs must only expose a marker if the responsible document for the work is same-origin with the profiler.
 
-There is a risk to introduce a new source of side channel information through this API. Specifically, the timings of cross-origin opaque resources owned by the document that do not pass a Timing-Allow-Origin check or the timings of cross-origin documents hosted by the same process. To mitigate this risk, a Sample's marker attribute may only be accessible when the current Realm's settings objects's cross-origin isolated capability boolean is set to true.
+To balance developer utility with privacy protection, markers are conditionally exposed based on security context:
+
+**Safe markers** (`style`, `layout`): Available in all contexts as this information is already accessible through existing web APIs (DOM APIs, CSSOM) and does not pose additional security risks.
+
+**Sensitive markers** (`gc`, `paint`, `script`): Only available in Cross-Origin Isolated contexts to prevent potential timing attacks and cross-origin information leakage. These markers could potentially be used for side-channel attacks or to infer information about cross-origin content.
+
+There is a risk to introduce a new source of side channel information through this API. The conditional exposure model mitigates this risk by:
+- Requiring Cross-Origin Isolation for sensitive timing information
+- Only exposing safe markers that reveal information already available through other APIs in regular contexts
+- Ensuring all markers are only exposed when the responsible document is same-origin with the profiler
 
 Additional checks may also be required by user agents to implement this feature.
 ## Considered alternatives
